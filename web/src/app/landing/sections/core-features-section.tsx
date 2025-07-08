@@ -1,7 +1,7 @@
 // Copyright (c) 2025 Bytedance Ltd. and/or its affiliates
 // SPDX-License-Identifier: MIT
 
-import { Bird, Microscope, Podcast, Usb, User } from "lucide-react";
+import { Bird, Microscope, Usb, User } from "lucide-react";
 
 import { BentoCard, BentoGrid } from "~/components/magicui/bento-grid";
 
@@ -54,19 +54,7 @@ const features = [
     background: (
       <img alt="background" className="absolute -top-20 -right-20 opacity-60" />
     ),
-    className: "lg:col-start-2 lg:col-end-3 lg:row-start-2 lg:row-end-3",
-  },
-  {
-    Icon: Podcast,
-    name: "Podcast Generation",
-    description:
-      "Instantly generate podcasts from reports. Perfect for on-the-go learning or sharing findings effortlessly.  ",
-    href: "https://github.com/bytedance/deer-flow/blob/main/src/podcast",
-    cta: "Learn more",
-    background: (
-      <img alt="background" className="absolute -top-20 -right-20 opacity-60" />
-    ),
-    className: "lg:col-start-2 lg:col-end-3 lg:row-start-3 lg:row-end-4",
+    className: "lg:col-start-2 lg:col-end-3 lg:row-start-2 lg:row-end-4",
   },
 ];
 

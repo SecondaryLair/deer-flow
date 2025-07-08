@@ -52,11 +52,11 @@ class ChatRequest(BaseModel):
     auto_accepted_plan: bool = Field(
         False, description="Whether to automatically accept the plan"
     )
-    interrupt_feedback: str = Field(
-        "", description="Interrupt feedback from the user on the plan"
+    interrupt_feedback: Optional[str] = Field(
+        None, description="Interrupt feedback from the user on the plan"
     )
-    mcp_settings: dict = Field(
-        {}, description="MCP settings for the chat request"
+    mcp_settings: Optional[dict] = Field(
+        None, description="MCP settings for the chat request"
     )
     enable_background_investigation: bool = Field(
         True, description="Whether to get background investigation before plan"
@@ -67,24 +67,6 @@ class ChatRequest(BaseModel):
     enable_deep_thinking: bool = Field(
         False, description="Whether to enable deep thinking"
     )
-
-
-class TTSRequest(BaseModel):
-    text: str = Field(..., description="The text to convert to speech")
-    voice_type: str = Field(
-        "BV700_V2_streaming", description="The voice type to use"
-    )
-    encoding: str = Field("mp3", description="The audio encoding format")
-    speed_ratio: float = Field(1.0, description="Speech speed ratio")
-    volume_ratio: float = Field(1.0, description="Speech volume ratio")
-    pitch_ratio: float = Field(1.0, description="Speech pitch ratio")
-    text_type: str = Field("plain", description="Text type (plain or ssml)")
-    with_frontend: int = Field(1, description="Whether to use frontend processing")
-    frontend_type: str = Field("unitTson", description="Frontend type")
-
-
-class GeneratePodcastRequest(BaseModel):
-    content: str = Field(..., description="The content of the podcast")
 
 
 class GeneratePPTRequest(BaseModel):

@@ -13,8 +13,6 @@ from src.server.chat_request import (
     ContentItem,
     ChatMessage,
     ChatRequest,
-    TTSRequest,
-    GeneratePodcastRequest,
     GeneratePPTRequest,
     GenerateProseRequest,
     EnhancePromptRequest,
@@ -96,24 +94,6 @@ def test_chat_request_with_values():
     assert req.report_style == ReportStyle.ACADEMIC
 
 
-def test_tts_request_defaults():
-    req = TTSRequest(text="hello")
-    assert req.text == "hello"
-    assert req.voice_type == "BV700_V2_streaming"
-    assert req.encoding == "mp3"
-    assert req.speed_ratio == 1.0
-    assert req.volume_ratio == 1.0
-    assert req.pitch_ratio == 1.0
-    assert req.text_type == "plain"
-    assert req.with_frontend == 1
-    assert req.frontend_type == "unitTson"
-
-
-def test_generate_podcast_request():
-    req = GeneratePodcastRequest(content="Podcast content")
-    assert req.content == "Podcast content"
-
-
 def test_generate_ppt_request():
     req = GeneratePPTRequest(content="PPT content")
     assert req.content == "PPT content"
@@ -146,11 +126,6 @@ def test_chat_message_validation_error():
         ChatMessage(role="user")  # missing content
 
 
-def test_tts_request_validation_error():
-    with pytest.raises(ValidationError):
-        TTSRequest()  # missing required 'text'
-
-
 @pytest.mark.asyncio
 @patch("src.server.mcp_utils._get_tools_from_client_session", new_callable=AsyncMock)
 @patch("src.server.mcp_utils.StdioServerParameters")
@@ -166,3 +141,8 @@ async def test_load_mcp_tools_exception_handling(
         await mcp_utils.load_mcp_tools(server_type="stdio", command="foo")  # Use await
     assert exc.value.status_code == 500
     assert "unexpected error" in exc.value.detail
+
+
+class TestGeneratePPTRequest:
+    def test_valid_request(self):
+        pass
