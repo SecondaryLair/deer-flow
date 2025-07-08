@@ -1,0 +1,24 @@
+# 隐藏常见的开发噪音文件
+.git/
+.DS_Store
+node_modules/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info
+dist/
+build/
+
+# 隐藏非核心目录
+docs/
+examples/
+assets/
+
+# 隐藏非核心文件
+uv.lock
+README*.md
+LICENSE
+CONTRIBUTING
+bootstrap.*
+pre-commit
