@@ -5,13 +5,14 @@ import base64
 import json
 import logging
 import os
-from typing import Annotated, List, cast
+from typing import Annotated, Any, List, cast
 from uuid import uuid4
 
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response, StreamingResponse
 from langchain_core.messages import AIMessageChunk, BaseMessage, ToolMessage
+from langchain_core.runnables import RunnableConfig
 from langgraph.types import Command
 
 from src.config.report_style import ReportStyle
@@ -25,6 +26,7 @@ from src.prose.graph.builder import build_graph as build_prose_graph
 from src.rag.builder import build_retriever
 from src.rag.retriever import Resource
 from src.server.chat_request import (
+    DEFAULT_CHAT_REQUEST_THREAD_ID_VALUE,
     ChatRequest,
     EnhancePromptRequest,
     GeneratePodcastRequest,
@@ -67,7 +69,7 @@ graph = build_graph_with_memory()
 @app.post("/api/chat/stream")
 async def chat_stream(request: ChatRequest):
     thread_id = request.thread_id
-    if thread_id == "__default__":
+    if thread_id == DEFAULT_CHAT_REQUEST_THREAD_ID_VALUE:
         thread_id = str(uuid4())
     return StreamingResponse(
         _astream_workflow_generator(
@@ -118,18 +120,19 @@ async def _astream_workflow_generator(
         if messages:
             resume_msg += f" {messages[-1]['content']}"
         input_ = Command(resume=resume_msg)
+    graph_stream_config = {
+        "thread_id": thread_id,
+        "resources": resources,
+        "max_plan_iterations": max_plan_iterations,
+        "max_step_num": max_step_num,
+        "max_search_results": max_search_results,
+        "mcp_settings": mcp_settings,
+        "report_style": report_style.value,
+        "enable_deep_thinking": enable_deep_thinking,
+    }
     async for agent, _, event_data in graph.astream(
         input_,
-        config={
-            "thread_id": thread_id,
-            "resources": resources,
-            "max_plan_iterations": max_plan_iterations,
-            "max_step_num": max_step_num,
-            "max_search_results": max_search_results,
-            "mcp_settings": mcp_settings,
-            "report_style": report_style.value,
-            "enable_deep_thinking": enable_deep_thinking,
-        },
+        config=graph_stream_config,
         stream_mode=["messages", "updates"],
         subgraphs=True,
     ):
@@ -151,9 +154,9 @@ async def _astream_workflow_generator(
                 )
             continue
         message_chunk, message_metadata = cast(
-            tuple[BaseMessage, dict[str, any]], event_data
+            tuple[BaseMessage, dict[str, Any]], event_data
         )
-        event_stream_message: dict[str, any] = {
+        event_stream_message: dict[str, Any] = {
             "thread_id": thread_id,
             "agent": agent[0].split(":")[0],
             "id": message_chunk.id,
@@ -192,7 +195,7 @@ async def _astream_workflow_generator(
                 yield _make_event("message_chunk", event_stream_message)
 
 
-def _make_event(event_type: str, data: dict[str, any]):
+def _make_event(event_type: str, data: dict[str, Any]):
     if data.get("content") == "":
         data.pop("content")
     return f"event: {event_type}\ndata: {json.dumps(data, ensure_ascii=False)}\n\n"

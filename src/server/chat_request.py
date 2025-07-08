@@ -27,60 +27,60 @@ class ChatMessage(BaseModel):
     )
 
 
+DEFAULT_CHAT_REQUEST_THREAD_ID_VALUE = "__default__"
+
+
 class ChatRequest(BaseModel):
     messages: Optional[List[ChatMessage]] = Field(
         [], description="History of messages between the user and the assistant"
     )
-    resources: Optional[List[Resource]] = Field(
+    resources: List[Resource] = Field(
         [], description="Resources to be used for the research"
     )
     debug: Optional[bool] = Field(False, description="Whether to enable debug logging")
-    thread_id: Optional[str] = Field(
-        "__default__", description="A specific conversation identifier"
+    thread_id: str = Field(
+        DEFAULT_CHAT_REQUEST_THREAD_ID_VALUE,
+        description="A specific conversation identifier",
     )
-    max_plan_iterations: Optional[int] = Field(
+    max_plan_iterations: int = Field(
         1, description="The maximum number of plan iterations"
     )
-    max_step_num: Optional[int] = Field(
-        3, description="The maximum number of steps in a plan"
-    )
-    max_search_results: Optional[int] = Field(
+    max_step_num: int = Field(3, description="The maximum number of steps in a plan")
+    max_search_results: int = Field(
         3, description="The maximum number of search results"
     )
-    auto_accepted_plan: Optional[bool] = Field(
+    auto_accepted_plan: bool = Field(
         False, description="Whether to automatically accept the plan"
     )
-    interrupt_feedback: Optional[str] = Field(
-        None, description="Interrupt feedback from the user on the plan"
+    interrupt_feedback: str = Field(
+        "", description="Interrupt feedback from the user on the plan"
     )
-    mcp_settings: Optional[dict] = Field(
-        None, description="MCP settings for the chat request"
+    mcp_settings: dict = Field(
+        {}, description="MCP settings for the chat request"
     )
-    enable_background_investigation: Optional[bool] = Field(
+    enable_background_investigation: bool = Field(
         True, description="Whether to get background investigation before plan"
     )
-    report_style: Optional[ReportStyle] = Field(
+    report_style: ReportStyle = Field(
         ReportStyle.ACADEMIC, description="The style of the report"
     )
-    enable_deep_thinking: Optional[bool] = Field(
+    enable_deep_thinking: bool = Field(
         False, description="Whether to enable deep thinking"
     )
 
 
 class TTSRequest(BaseModel):
     text: str = Field(..., description="The text to convert to speech")
-    voice_type: Optional[str] = Field(
+    voice_type: str = Field(
         "BV700_V2_streaming", description="The voice type to use"
     )
-    encoding: Optional[str] = Field("mp3", description="The audio encoding format")
-    speed_ratio: Optional[float] = Field(1.0, description="Speech speed ratio")
-    volume_ratio: Optional[float] = Field(1.0, description="Speech volume ratio")
-    pitch_ratio: Optional[float] = Field(1.0, description="Speech pitch ratio")
-    text_type: Optional[str] = Field("plain", description="Text type (plain or ssml)")
-    with_frontend: Optional[int] = Field(
-        1, description="Whether to use frontend processing"
-    )
-    frontend_type: Optional[str] = Field("unitTson", description="Frontend type")
+    encoding: str = Field("mp3", description="The audio encoding format")
+    speed_ratio: float = Field(1.0, description="Speech speed ratio")
+    volume_ratio: float = Field(1.0, description="Speech volume ratio")
+    pitch_ratio: float = Field(1.0, description="Speech pitch ratio")
+    text_type: str = Field("plain", description="Text type (plain or ssml)")
+    with_frontend: int = Field(1, description="Whether to use frontend processing")
+    frontend_type: str = Field("unitTson", description="Frontend type")
 
 
 class GeneratePodcastRequest(BaseModel):

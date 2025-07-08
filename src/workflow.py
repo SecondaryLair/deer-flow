@@ -1,8 +1,9 @@
 # Copyright (c) 2025 Bytedance Ltd. and/or its affiliates
 # SPDX-License-Identifier: MIT
 
-import asyncio
 import logging
+
+from langchain_core.runnables import RunnableConfig
 from src.graph import build_graph
 
 # Configure logging
@@ -55,7 +56,7 @@ async def run_agent_workflow_async(
         "auto_accepted_plan": True,
         "enable_background_investigation": enable_background_investigation,
     }
-    config = {
+    config: RunnableConfig = {
         "configurable": {
             "thread_id": "default",
             "max_plan_iterations": max_plan_iterations,
