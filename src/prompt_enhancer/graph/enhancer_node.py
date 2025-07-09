@@ -3,12 +3,12 @@
 
 import logging
 
-from langchain.schema import HumanMessage, SystemMessage
+from langchain.schema import HumanMessage
 
 from src.config.agents import AGENT_LLM_MAP
 from src.llms.llm import get_llm_by_type
-from src.prompts.template import env, apply_prompt_template
 from src.prompt_enhancer.graph.state import PromptEnhancerState
+from src.prompts.template import apply_prompt_template
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +20,6 @@ def prompt_enhancer_node(state: PromptEnhancerState):
     model = get_llm_by_type(AGENT_LLM_MAP["prompt_enhancer"])
 
     try:
-
         # Create messages with context if provided
         context_info = ""
         if state.get("context"):
@@ -63,5 +62,5 @@ def prompt_enhancer_node(state: PromptEnhancerState):
         logger.debug(f"Enhanced prompt: {enhanced_prompt}")
         return {"output": enhanced_prompt}
     except Exception as e:
-        logger.error(f"Error in prompt enhancement: {str(e)}")
+        logger.error(f"Error in prompt enhancement: {e!s}")
         return {"output": state["prompt"]}

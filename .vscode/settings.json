@@ -1,0 +1,35 @@
+{
+    "files.associations": {
+        "Makefile": "justfile",
+    },
+    "[justfile]": {
+        "editor.insertSpaces": true,
+        "editor.tabSize": 4,
+    },
+    "explorer.excludeGitIgnore": true,
+    "files.exclude": {
+        "**/.git": true,
+        "**/.DS_Store": true,
+        "**/node_modules": true,
+        "**/__pycache__": true,
+        "**/*.pyc": true,
+        "**/*.pyo": true,
+        "**/*.pyd": true,
+        "**/*.egg-info": true,
+        "**/dist": true,
+        "**/build": true,
+        "**/assets": true,
+        "**/uv.lock": true,
+        "**/LICENSE": true,
+        "**/CONTRIBUTING": true,
+        "**/bootstrap.*": true,
+        "**/.python-version": true,
+        "**/Makefile": true,
+    },
+    "search.exclude": {
+        "**/node_modules": true,
+        "**/__pycache__": true,
+        "**/dist": true,
+        "**/build": true,
+    }
+}

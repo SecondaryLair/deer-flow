@@ -2,7 +2,7 @@
 
 # Run make lint
 echo "Running linting..."
-make lint
+just lint
 LINT_RESULT=$?
 
 if [ $LINT_RESULT -ne 0 ]; then
@@ -12,7 +12,7 @@ fi
 
 # Run make format
 echo "Running formatting..."
-make format
+just format
 FORMAT_RESULT=$?
 
 if [ $FORMAT_RESULT -ne 0 ]; then

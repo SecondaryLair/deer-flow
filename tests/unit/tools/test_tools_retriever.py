@@ -1,14 +1,16 @@
 # Copyright (c) 2025 Bytedance Ltd. and/or its affiliates
 # SPDX-License-Identifier: MIT
 
-from unittest.mock import Mock, patch, MagicMock
-from langchain_core.callbacks import (
-    CallbackManagerForToolRun,
-    AsyncCallbackManagerForToolRun,
-)
+from unittest.mock import Mock, patch
+
 import pytest
+from langchain_core.callbacks import (
+    AsyncCallbackManagerForToolRun,
+    CallbackManagerForToolRun,
+)
+
+from src.rag import Chunk, Document, Resource, Retriever
 from src.tools.retriever import RetrieverInput, RetrieverTool, get_retriever_tool
-from src.rag import Document, Retriever, Resource, Chunk
 
 
 def test_retriever_input_model():
@@ -39,9 +41,7 @@ def test_retriever_tool_run_with_results():
 
     result = tool._run("test keywords")
 
-    mock_retriever.query_relevant_documents.assert_called_once_with(
-        "test keywords", resources
-    )
+    mock_retriever.query_relevant_documents.assert_called_once_with("test keywords", resources)
     assert isinstance(result, list)
     assert len(result) == 1
     assert result[0] == doc.to_dict()

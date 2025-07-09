@@ -2,19 +2,19 @@
 # SPDX-License-Identifier: MIT
 
 import json
+from unittest.mock import AsyncMock, Mock, patch
+
 import pytest
-from unittest.mock import Mock, patch, AsyncMock
-from typing import Dict, Any
-from src.tools.tavily_search.tavily_search_results_with_images import (
-    TavilySearchResultsWithImages,
-)
+
 from src.tools.tavily_search.tavily_search_api_wrapper import (
     EnhancedTavilySearchAPIWrapper,
+)
+from src.tools.tavily_search.tavily_search_results_with_images import (
+    TavilySearchResultsWithImages,
 )
 
 
 class TestTavilySearchResultsWithImages:
-
     @pytest.fixture
     def mock_api_wrapper(self):
         """Create a mock API wrapper."""
@@ -72,9 +72,7 @@ class TestTavilySearchResultsWithImages:
 
     def test_init_custom_values(self):
         """Test initialization with custom values."""
-        tool = TavilySearchResultsWithImages(
-            max_results=10, include_image_descriptions=True
-        )
+        tool = TavilySearchResultsWithImages(max_results=10, include_image_descriptions=True)
         assert tool.max_results == 10
         assert tool.include_image_descriptions is True
 
@@ -108,9 +106,7 @@ class TestTavilySearchResultsWithImages:
             search_tool.include_image_descriptions,
         )
 
-        mock_api_wrapper.clean_results_with_images.assert_called_once_with(
-            sample_raw_results
-        )
+        mock_api_wrapper.clean_results_with_images.assert_called_once_with(sample_raw_results)
         mock_print.assert_called_once()
 
     @patch("builtins.print")
@@ -155,18 +151,14 @@ class TestTavilySearchResultsWithImages:
             search_tool.include_image_descriptions,
         )
 
-        mock_api_wrapper.clean_results_with_images.assert_called_once_with(
-            sample_raw_results
-        )
+        mock_api_wrapper.clean_results_with_images.assert_called_once_with(sample_raw_results)
         mock_print.assert_called_once()
 
     @pytest.mark.asyncio
     @patch("builtins.print")
     async def test_arun_exception(self, mock_print, search_tool, mock_api_wrapper):
         """Test asynchronous run with exception."""
-        mock_api_wrapper.raw_results_async = AsyncMock(
-            side_effect=Exception("Async API Error")
-        )
+        mock_api_wrapper.raw_results_async = AsyncMock(side_effect=Exception("Async API Error"))
 
         result, raw = await search_tool._arun("test query")
 
@@ -208,9 +200,7 @@ class TestTavilySearchResultsWithImages:
         mock_api_wrapper.raw_results_async = AsyncMock(return_value=sample_raw_results)
         mock_api_wrapper.clean_results_with_images.return_value = sample_cleaned_results
 
-        result, raw = await search_tool._arun(
-            "test query", run_manager=mock_run_manager
-        )
+        result, raw = await search_tool._arun("test query", run_manager=mock_run_manager)
 
         assert result == sample_cleaned_results
         assert raw == sample_raw_results

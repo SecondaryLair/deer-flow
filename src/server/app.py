@@ -1,18 +1,15 @@
 # Copyright (c) 2025 Bytedance Ltd. and/or its affiliates
 # SPDX-License-Identifier: MIT
 
-import base64
 import json
 import logging
-import os
-from typing import Annotated, Any, List, cast
+from typing import Annotated, Any, cast
 from uuid import uuid4
 
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import Response, StreamingResponse
+from fastapi.responses import StreamingResponse
 from langchain_core.messages import AIMessageChunk, BaseMessage, ToolMessage
-from langchain_core.runnables import RunnableConfig
 from langgraph.types import Command
 
 from src.config.report_style import ReportStyle
@@ -85,9 +82,9 @@ async def chat_stream(request: ChatRequest):
 
 
 async def _astream_workflow_generator(
-    messages: List[dict],
+    messages: list[dict],
     thread_id: str,
-    resources: List[Resource],
+    resources: list[Resource],
     max_plan_iterations: int,
     max_step_num: int,
     max_search_results: int,
@@ -147,9 +144,7 @@ async def _astream_workflow_generator(
                     },
                 )
             continue
-        message_chunk, message_metadata = cast(
-            tuple[BaseMessage, dict[str, Any]], event_data
-        )
+        message_chunk, message_metadata = cast("tuple[BaseMessage, dict[str, Any]]", event_data)
         event_stream_message: dict[str, Any] = {
             "thread_id": thread_id,
             "agent": agent[0].split(":")[0],
@@ -158,13 +153,9 @@ async def _astream_workflow_generator(
             "content": message_chunk.content,
         }
         if message_chunk.additional_kwargs.get("reasoning_content"):
-            event_stream_message["reasoning_content"] = message_chunk.additional_kwargs[
-                "reasoning_content"
-            ]
+            event_stream_message["reasoning_content"] = message_chunk.additional_kwargs["reasoning_content"]
         if message_chunk.response_metadata.get("finish_reason"):
-            event_stream_message["finish_reason"] = message_chunk.response_metadata.get(
-                "finish_reason"
-            )
+            event_stream_message["finish_reason"] = message_chunk.response_metadata.get("finish_reason")
         if isinstance(message_chunk, ToolMessage):
             # Tool Message - Return the result of the tool call
             event_stream_message["tool_call_id"] = message_chunk.tool_call_id
@@ -174,15 +165,11 @@ async def _astream_workflow_generator(
             if message_chunk.tool_calls:
                 # AI Message - Tool Call
                 event_stream_message["tool_calls"] = message_chunk.tool_calls
-                event_stream_message["tool_call_chunks"] = (
-                    message_chunk.tool_call_chunks
-                )
+                event_stream_message["tool_call_chunks"] = message_chunk.tool_call_chunks
                 yield _make_event("tool_calls", event_stream_message)
             elif message_chunk.tool_call_chunks:
                 # AI Message - Tool Call Chunks
-                event_stream_message["tool_call_chunks"] = (
-                    message_chunk.tool_call_chunks
-                )
+                event_stream_message["tool_call_chunks"] = message_chunk.tool_call_chunks
                 yield _make_event("tool_call_chunks", event_stream_message)
             else:
                 # AI Message - Raw message tokens
@@ -215,7 +202,7 @@ async def generate_prose(request: GenerateProseRequest):
             media_type="text/event-stream",
         )
     except Exception as e:
-        logger.exception(f"Error occurred during prose generation: {str(e)}")
+        logger.exception(f"Error occurred during prose generation: {e!s}")
         raise HTTPException(status_code=500, detail=INTERNAL_SERVER_ERROR_DETAIL)
 
 
@@ -236,9 +223,7 @@ async def enhance_prompt(request: EnhancePromptRequest):
                     "NEWS": ReportStyle.NEWS,
                     "SOCIAL_MEDIA": ReportStyle.SOCIAL_MEDIA,
                 }
-                report_style = style_mapping.get(
-                    request.report_style.upper(), ReportStyle.ACADEMIC
-                )
+                report_style = style_mapping.get(request.report_style.upper(), ReportStyle.ACADEMIC)
             except Exception:
                 # If invalid style, default to ACADEMIC
                 report_style = ReportStyle.ACADEMIC
@@ -255,7 +240,7 @@ async def enhance_prompt(request: EnhancePromptRequest):
         )
         return {"result": final_state["output"]}
     except Exception as e:
-        logger.exception(f"Error occurred during prompt enhancement: {str(e)}")
+        logger.exception(f"Error occurred during prompt enhancement: {e!s}")
         raise HTTPException(status_code=500, detail=INTERNAL_SERVER_ERROR_DETAIL)
 
 
@@ -292,7 +277,7 @@ async def mcp_server_metadata(request: MCPServerMetadataRequest):
 
         return response
     except Exception as e:
-        logger.exception(f"Error in MCP server metadata endpoint: {str(e)}")
+        logger.exception(f"Error in MCP server metadata endpoint: {e!s}")
         raise HTTPException(status_code=500, detail=INTERNAL_SERVER_ERROR_DETAIL)
 
 

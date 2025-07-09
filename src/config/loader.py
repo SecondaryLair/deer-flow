@@ -2,8 +2,9 @@
 # SPDX-License-Identifier: MIT
 
 import os
+from typing import Any
+
 import yaml
-from typing import Dict, Any
 
 
 def replace_env_vars(value: str) -> str:
@@ -16,7 +17,7 @@ def replace_env_vars(value: str) -> str:
     return value
 
 
-def process_dict(config: Dict[str, Any]) -> Dict[str, Any]:
+def process_dict(config: dict[str, Any]) -> dict[str, Any]:
     """Recursively process dictionary to replace environment variables."""
     if not config:
         return {}
@@ -31,10 +32,10 @@ def process_dict(config: Dict[str, Any]) -> Dict[str, Any]:
     return result
 
 
-_config_cache: Dict[str, Dict[str, Any]] = {}
+_config_cache: dict[str, dict[str, Any]] = {}
 
 
-def load_yaml_config(file_path: str) -> Dict[str, Any]:
+def load_yaml_config(file_path: str) -> dict[str, Any]:
     """Load and process YAML configuration file."""
     # 如果文件不存在，返回{}
     if not os.path.exists(file_path):
@@ -45,7 +46,7 @@ def load_yaml_config(file_path: str) -> Dict[str, Any]:
         return _config_cache[file_path]
 
     # 如果缓存中不存在，则加载并处理配置
-    with open(file_path, "r") as f:
+    with open(file_path) as f:
         config = yaml.safe_load(f)
     processed_config = process_dict(config)
 

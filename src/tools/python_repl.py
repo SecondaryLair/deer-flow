@@ -3,8 +3,10 @@
 
 import logging
 from typing import Annotated
+
 from langchain_core.tools import tool
 from langchain_experimental.utilities import PythonREPL
+
 from .decorators import log_io
 
 # Initialize REPL and logger
@@ -15,12 +17,11 @@ logger = logging.getLogger(__name__)
 @tool
 @log_io
 def python_repl_tool(
-    code: Annotated[
-        str, "The python code to execute to do further analysis or calculation."
-    ],
+    code: Annotated[str, "The python code to execute to do further analysis or calculation."],
 ):
     """Use this to execute python code and do data analysis or calculation. If you want to see the output of a value,
-    you should print it out with `print(...)`. This is visible to the user."""
+    you should print it out with `print(...)`. This is visible to the user.
+    """
     if not isinstance(code, str):
         error_msg = f"Invalid input: code must be a string, got {type(code)}"
         logger.error(error_msg)

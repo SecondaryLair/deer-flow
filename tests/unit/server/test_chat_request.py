@@ -1,22 +1,22 @@
 # Copyright (c) 2025 Bytedance Ltd. and/or its affiliates
 # SPDX-License-Identifier: MIT
 
-import asyncio  # Ensure asyncio is imported
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
+from fastapi import HTTPException
 from pydantic import ValidationError
+
 from src.config.report_style import ReportStyle
 from src.rag.retriever import Resource
-from unittest.mock import AsyncMock, patch, MagicMock
-from fastapi import HTTPException
-
+from src.server import mcp_utils  # Assuming mcp_utils is the module to test
 from src.server.chat_request import (
-    ContentItem,
     ChatMessage,
     ChatRequest,
-    GenerateProseRequest,
+    ContentItem,
     EnhancePromptRequest,
+    GenerateProseRequest,
 )
-import src.server.mcp_utils as mcp_utils  # Assuming mcp_utils is the module to test
 
 
 def test_content_item_text_and_image():
@@ -62,9 +62,7 @@ def test_chat_request_defaults():
 
 
 def test_chat_request_with_values():
-    resource = Resource(
-        name="test", type="doc", uri="some-uri-value", title="some-title-value"
-    )
+    resource = Resource(name="test", type="doc", uri="some-uri-value", title="some-title-value")
     msg = ChatMessage(role="user", content="hi")
     req = ChatRequest(
         messages=[msg],

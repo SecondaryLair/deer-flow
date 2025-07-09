@@ -1,10 +1,9 @@
 # Copyright (c) 2025 Bytedance Ltd. and/or its affiliates
 # SPDX-License-Identifier: MIT
 
-import pytest
-import sys
 import os
-from typing import Annotated, List, Optional
+import sys
+from typing import Annotated
 
 # Import MessagesState directly from langgraph rather than through our application
 from langgraph.graph import MessagesState
@@ -56,7 +55,7 @@ def load_state_class():
     spec.__dict__["Plan"] = Plan
 
     # Execute the module code
-    with open(types_path, "r") as f:
+    with open(types_path) as f:
         module_code = f.read()
 
     exec(module_code, spec.__dict__)

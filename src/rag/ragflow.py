@@ -2,15 +2,15 @@
 # SPDX-License-Identifier: MIT
 
 import os
-import requests
-from src.rag.retriever import Chunk, Document, Resource, Retriever
 from urllib.parse import urlparse
+
+import requests
+
+from src.rag.retriever import Chunk, Document, Resource, Retriever
 
 
 class RAGFlowProvider(Retriever):
-    """
-    RAGFlowProvider is a provider that uses RAGFlow to retrieve documents.
-    """
+    """RAGFlowProvider is a provider that uses RAGFlow to retrieve documents."""
 
     api_url: str
     api_key: str
@@ -31,9 +31,7 @@ class RAGFlowProvider(Retriever):
         if page_size:
             self.page_size = int(page_size)
 
-    def query_relevant_documents(
-        self, query: str, resources: list[Resource] = []
-    ) -> list[Document]:
+    def query_relevant_documents(self, query: str, resources: list[Resource] = []) -> list[Document]:
         headers = {
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json",
@@ -55,9 +53,7 @@ class RAGFlowProvider(Retriever):
             "page_size": self.page_size,
         }
 
-        response = requests.post(
-            f"{self.api_url}/api/v1/retrieval", headers=headers, json=payload
-        )
+        response = requests.post(f"{self.api_url}/api/v1/retrieval", headers=headers, json=payload)
 
         if response.status_code != 200:
             raise Exception(f"Failed to query documents: {response.text}")
@@ -96,9 +92,7 @@ class RAGFlowProvider(Retriever):
         if query:
             params["name"] = query
 
-        response = requests.get(
-            f"{self.api_url}/api/v1/datasets", headers=headers, params=params
-        )
+        response = requests.get(f"{self.api_url}/api/v1/datasets", headers=headers, params=params)
 
         if response.status_code != 200:
             raise Exception(f"Failed to list resources: {response.text}")

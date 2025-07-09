@@ -1,7 +1,6 @@
 # Copyright (c) 2025 Bytedance Ltd. and/or its affiliates
 # SPDX-License-Identifier: MIT
 
-import json
 import logging
 import os
 
@@ -9,12 +8,11 @@ from langchain_community.tools import BraveSearch, DuckDuckGoSearchResults
 from langchain_community.tools.arxiv import ArxivQueryRun
 from langchain_community.utilities import ArxivAPIWrapper, BraveSearchWrapper
 
-from src.config import SearchEngine, SELECTED_SEARCH_ENGINE
+from src.config import SELECTED_SEARCH_ENGINE, SearchEngine
+from src.tools.decorators import create_logged_tool
 from src.tools.tavily_search.tavily_search_results_with_images import (
     TavilySearchResultsWithImages,
 )
-
-from src.tools.decorators import create_logged_tool
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +25,7 @@ LoggedArxivSearch = create_logged_tool(ArxivQueryRun)
 
 # Get the selected search tool
 def get_web_search_tool(max_search_results: int):
-    if SELECTED_SEARCH_ENGINE == SearchEngine.TAVILY.value:
+    if SearchEngine.TAVILY.value == SELECTED_SEARCH_ENGINE:
         return LoggedTavilySearch(
             name="web_search",
             max_results=max_search_results,
@@ -35,12 +33,12 @@ def get_web_search_tool(max_search_results: int):
             include_images=True,
             include_image_descriptions=True,
         )
-    elif SELECTED_SEARCH_ENGINE == SearchEngine.DUCKDUCKGO.value:
+    if SearchEngine.DUCKDUCKGO.value == SELECTED_SEARCH_ENGINE:
         return LoggedDuckDuckGoSearch(
             name="web_search",
             num_results=max_search_results,
         )
-    elif SELECTED_SEARCH_ENGINE == SearchEngine.BRAVE_SEARCH.value:
+    if SearchEngine.BRAVE_SEARCH.value == SELECTED_SEARCH_ENGINE:
         return LoggedBraveSearch(
             name="web_search",
             search_wrapper=BraveSearchWrapper(
@@ -48,7 +46,7 @@ def get_web_search_tool(max_search_results: int):
                 search_kwargs={"count": max_search_results},
             ),
         )
-    elif SELECTED_SEARCH_ENGINE == SearchEngine.ARXIV.value:
+    if SearchEngine.ARXIV.value == SELECTED_SEARCH_ENGINE:
         return LoggedArxivSearch(
             name="web_search",
             api_wrapper=ArxivAPIWrapper(
@@ -57,5 +55,4 @@ def get_web_search_tool(max_search_results: int):
                 load_all_available_meta=True,
             ),
         )
-    else:
-        raise ValueError(f"Unsupported search engine: {SELECTED_SEARCH_ENGINE}")
+    raise ValueError(f"Unsupported search engine: {SELECTED_SEARCH_ENGINE}")

@@ -1,14 +1,13 @@
 # Copyright (c) 2025 Bytedance Ltd. and/or its affiliates
 # SPDX-License-Identifier: MIT
 
-"""
-Server script for running the DeerFlow API.
-"""
+"""Server script for running the DeerFlow API."""
 
 import argparse
 import logging
 import signal
 import sys
+
 import uvicorn
 
 # Configure logging
@@ -75,5 +74,5 @@ if __name__ == "__main__":
             log_level=args.log_level,
         )
     except Exception as e:
-        logger.error(f"Failed to start server: {str(e)}")
+        logger.error(f"Failed to start server: {e!s}")
         sys.exit(1)

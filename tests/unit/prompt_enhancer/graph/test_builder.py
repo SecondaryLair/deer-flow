@@ -1,12 +1,12 @@
 # Copyright (c) 2025 Bytedance Ltd. and/or its affiliates
 # SPDX-License-Identifier: MIT
 
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock
 
 from src.prompt_enhancer.graph.builder import build_graph
 from src.prompt_enhancer.graph.state import PromptEnhancerState
-from src.config.report_style import ReportStyle
 
 
 class TestBuildGraph:
@@ -116,9 +116,7 @@ class TestBuildGraph:
             # If there are configuration issues (like missing LLM config),
             # we still consider the test successful if the graph structure is built
             if "LLM" in str(e) or "configuration" in str(e).lower():
-                pytest.skip(
-                    f"Skipping integration test due to configuration issues: {e}"
-                )
+                pytest.skip(f"Skipping integration test due to configuration issues: {e}")
             else:
                 raise
 

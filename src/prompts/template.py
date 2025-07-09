@@ -1,11 +1,13 @@
 # Copyright (c) 2025 Bytedance Ltd. and/or its affiliates
 # SPDX-License-Identifier: MIT
 
-import os
 import dataclasses
+import os
 from datetime import datetime
+
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from langgraph.prebuilt.chat_agent_executor import AgentState
+
 from src.config.configuration import Configuration
 
 # Initialize Jinja2 environment
@@ -18,14 +20,14 @@ env = Environment(
 
 
 def get_prompt_template(prompt_name: str) -> str:
-    """
-    Load and return a prompt template using Jinja2.
+    """Load and return a prompt template using Jinja2.
 
     Args:
         prompt_name: Name of the prompt template file (without .md extension)
 
     Returns:
         The template string with proper variable substitution syntax
+
     """
     try:
         template = env.get_template(f"{prompt_name}.md")
@@ -34,11 +36,8 @@ def get_prompt_template(prompt_name: str) -> str:
         raise ValueError(f"Error loading template {prompt_name}: {e}")
 
 
-def apply_prompt_template(
-    prompt_name: str, state: AgentState, configurable: Configuration = None
-) -> list:
-    """
-    Apply template variables to a prompt template and return formatted messages.
+def apply_prompt_template(prompt_name: str, state: AgentState, configurable: Configuration = None) -> list:
+    """Apply template variables to a prompt template and return formatted messages.
 
     Args:
         prompt_name: Name of the prompt template to use
@@ -46,6 +45,7 @@ def apply_prompt_template(
 
     Returns:
         List of messages with the system prompt as the first message
+
     """
     # Convert state to dict for template rendering
     state_vars = {

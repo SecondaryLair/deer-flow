@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: MIT
 
 import json
-from typing import Dict, List, Optional, Tuple, Union
 
 from langchain.callbacks.manager import (
     AsyncCallbackManagerForToolRun,
@@ -48,7 +47,7 @@ class TavilySearchResultsWithImages(TavilySearchResults):  # type: ignore[overri
 
         .. code-block:: python
 
-            tool.invoke({'query': 'who won the last french open'})
+            tool.invoke({"query": "who won the last french open"})
 
         .. code-block:: json
 
@@ -61,34 +60,33 @@ class TavilySearchResultsWithImages(TavilySearchResults):  # type: ignore[overri
 
         .. code-block:: python
 
-            tool.invoke({"args": {'query': 'who won the last french open'}, "type": "tool_call", "id": "foo", "name": "tavily"})
+            tool.invoke(
+                {"args": {"query": "who won the last french open"}, "type": "tool_call", "id": "foo", "name": "tavily"}
+            )
 
         .. code-block:: python
 
             ToolMessage(
                 content='{ "url": "https://www.nytimes.com...", "content": "Novak Djokovic won the last French Open by beating Casper Ruud ..." }',
                 artifact={
-                    'query': 'who won the last french open',
-                    'follow_up_questions': None,
-                    'answer': 'Novak ...',
-                    'images': [
-                        'https://www.amny.com/wp-content/uploads/2023/06/AP23162622181176-1200x800.jpg',
-                        ...
-                        ],
-                    'results': [
+                    "query": "who won the last french open",
+                    "follow_up_questions": None,
+                    "answer": "Novak ...",
+                    "images": ["https://www.amny.com/wp-content/uploads/2023/06/AP23162622181176-1200x800.jpg", ...],
+                    "results": [
                         {
-                            'title': 'Djokovic ...',
-                            'url': 'https://www.nytimes.com...',
-                            'content': "Novak...",
-                            'score': 0.99505633,
-                            'raw_content': 'Tennis\nNovak ...'
+                            "title": "Djokovic ...",
+                            "url": "https://www.nytimes.com...",
+                            "content": "Novak...",
+                            "score": 0.99505633,
+                            "raw_content": "Tennis\nNovak ...",
                         },
-                        ...
+                        ...,
                     ],
-                    'response_time': 2.92
+                    "response_time": 2.92,
                 },
-                tool_call_id='1',
-                name='tavily_search_results_json',
+                tool_call_id="1",
+                name="tavily_search_results_json",
             )
 
     """  # noqa: E501
@@ -104,8 +102,8 @@ class TavilySearchResultsWithImages(TavilySearchResults):  # type: ignore[overri
     def _run(
         self,
         query: str,
-        run_manager: Optional[CallbackManagerForToolRun] = None,
-    ) -> Tuple[Union[List[Dict[str, str]], str], Dict]:
+        run_manager: CallbackManagerForToolRun | None = None,
+    ) -> tuple[list[dict[str, str]] | str, dict]:
         """Use the tool."""
         # TODO: remove try/except, should be handled by BaseTool
         try:
@@ -129,8 +127,8 @@ class TavilySearchResultsWithImages(TavilySearchResults):  # type: ignore[overri
     async def _arun(
         self,
         query: str,
-        run_manager: Optional[AsyncCallbackManagerForToolRun] = None,
-    ) -> Tuple[Union[List[Dict[str, str]], str], Dict]:
+        run_manager: AsyncCallbackManagerForToolRun | None = None,
+    ) -> tuple[list[dict[str, str]] | str, dict]:
         """Use the tool asynchronously."""
         try:
             raw_results = await self.api_wrapper.raw_results_async(

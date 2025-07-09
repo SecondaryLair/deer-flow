@@ -20,6 +20,9 @@ jobs:
       with:
         version: "latest"
 
+    - name: Setup justfile
+      uses: extractions/setup-just@v3
+
     - name: Install dependencies
       run: |
         uv venv --python 3.12
@@ -29,7 +32,7 @@ jobs:
     - name: Run test cases with coverage
       run: |
         source .venv/bin/activate
-        TAVILY_API_KEY=mock-key make coverage
+        TAVILY_API_KEY=mock-key just coverage
 
     - name: Generate HTML Coverage Report
       run: |
@@ -41,7 +44,7 @@ jobs:
       with:
         name: coverage-report
         path: coverage_html/
-        
+
     - name: Display Coverage Summary
       run: |
         source .venv/bin/activate

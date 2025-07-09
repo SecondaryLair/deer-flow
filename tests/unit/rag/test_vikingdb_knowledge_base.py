@@ -1,10 +1,12 @@
 # Copyright (c) 2025 Bytedance Ltd. and/or its affiliates
 # SPDX-License-Identifier: MIT
 
-import os
-import pytest
 import json
-from unittest.mock import patch, MagicMock
+import os
+from unittest.mock import MagicMock, patch
+
+import pytest
+
 from src.rag.vikingdb_knowledge_base import VikingDBKnowledgeBaseProvider, parse_uri
 
 
@@ -128,9 +130,7 @@ class TestVikingDBKnowledgeBaseProviderInit:
             },
             clear=True,
         ):
-            with pytest.raises(
-                ValueError, match="VIKINGDB_KNOWLEDGE_BASE_API_URL is not set"
-            ):
+            with pytest.raises(ValueError, match="VIKINGDB_KNOWLEDGE_BASE_API_URL is not set"):
                 VikingDBKnowledgeBaseProvider()
 
     def test_init_missing_api_ak(self):
@@ -143,9 +143,7 @@ class TestVikingDBKnowledgeBaseProviderInit:
             },
             clear=True,
         ):
-            with pytest.raises(
-                ValueError, match="VIKINGDB_KNOWLEDGE_BASE_API_AK is not set"
-            ):
+            with pytest.raises(ValueError, match="VIKINGDB_KNOWLEDGE_BASE_API_AK is not set"):
                 VikingDBKnowledgeBaseProvider()
 
     def test_init_missing_api_sk(self):
@@ -158,9 +156,7 @@ class TestVikingDBKnowledgeBaseProviderInit:
             },
             clear=True,
         ):
-            with pytest.raises(
-                ValueError, match="VIKINGDB_KNOWLEDGE_BASE_API_SK is not set"
-            ):
+            with pytest.raises(ValueError, match="VIKINGDB_KNOWLEDGE_BASE_API_SK is not set"):
                 VikingDBKnowledgeBaseProvider()
 
 
@@ -176,7 +172,6 @@ class TestVikingDBKnowledgeBaseProviderPrepareRequest:
             patch("src.rag.vikingdb_knowledge_base.Credentials") as mock_credentials,
             patch("src.rag.vikingdb_knowledge_base.SignerV4.sign") as mock_sign,
         ):
-
             mock_req_instance = MagicMock()
             mock_request.return_value = mock_req_instance
 
@@ -194,7 +189,6 @@ class TestVikingDBKnowledgeBaseProviderPrepareRequest:
             patch("src.rag.vikingdb_knowledge_base.Credentials"),
             patch("src.rag.vikingdb_knowledge_base.SignerV4.sign"),
         ):
-
             mock_req_instance = MagicMock()
             mock_request.return_value = mock_req_instance
 
@@ -211,7 +205,6 @@ class TestVikingDBKnowledgeBaseProviderPrepareRequest:
             patch("src.rag.vikingdb_knowledge_base.Credentials"),
             patch("src.rag.vikingdb_knowledge_base.SignerV4.sign"),
         ):
-
             mock_req_instance = MagicMock()
             mock_request.return_value = mock_req_instance
 
@@ -275,9 +268,7 @@ class TestVikingDBKnowledgeBaseProviderQueryRelevantDocuments:
             assert result[0].chunks[0].similarity == 0.95
 
     @patch("src.rag.vikingdb_knowledge_base.requests.request")
-    def test_query_relevant_documents_with_document_filter(
-        self, mock_request, provider
-    ):
+    def test_query_relevant_documents_with_document_filter(self, mock_request, provider):
         """Test document query with document ID filter"""
         mock_response = MagicMock()
         mock_response.text = json.dumps({"code": 0, "data": {"result_list": []}})
@@ -310,9 +301,7 @@ class TestVikingDBKnowledgeBaseProviderQueryRelevantDocuments:
 
         with patch.object(provider, "prepare_request"):
             resources = [MockResource("rag://dataset/123")]
-            with pytest.raises(
-                ValueError, match="Failed to query documents from resource: API Error"
-            ):
+            with pytest.raises(ValueError, match="Failed to query documents from resource: API Error"):
                 provider.query_relevant_documents("test query", resources)
 
     @patch("src.rag.vikingdb_knowledge_base.requests.request")

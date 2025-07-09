@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 import abc
+
 from pydantic import BaseModel, Field
 
 
@@ -15,9 +16,7 @@ class Chunk:
 
 
 class Document:
-    """
-    Document is a class that represents a document.
-    """
+    """Document is a class that represents a document."""
 
     id: str
     url: str | None = None
@@ -49,9 +48,7 @@ class Document:
 
 
 class Resource(BaseModel):
-    """
-    Resource is a class that represents a resource.
-    """
+    """Resource is a class that represents a resource."""
 
     uri: str = Field(..., description="The URI of the resource")
     title: str = Field(..., description="The title of the resource")
@@ -59,22 +56,12 @@ class Resource(BaseModel):
 
 
 class Retriever(abc.ABC):
-    """
-    Define a RAG provider, which can be used to query documents and resources.
-    """
+    """Define a RAG provider, which can be used to query documents and resources."""
 
     @abc.abstractmethod
     def list_resources(self, query: str | None = None) -> list[Resource]:
-        """
-        List resources from the rag provider.
-        """
-        pass
+        """List resources from the rag provider."""
 
     @abc.abstractmethod
-    def query_relevant_documents(
-        self, query: str, resources: list[Resource] = []
-    ) -> list[Document]:
-        """
-        Query relevant documents from the resources.
-        """
-        pass
+    def query_relevant_documents(self, query: str, resources: list[Resource] = []) -> list[Document]:
+        """Query relevant documents from the resources."""

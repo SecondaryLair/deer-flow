@@ -4,6 +4,7 @@
 import logging
 
 from langchain_core.runnables import RunnableConfig
+
 from src.graph import build_graph
 
 # Configure logging
@@ -42,9 +43,11 @@ async def run_agent_workflow_async(
 
     Returns:
         The final state after the workflow completes
+
     """
     if not user_input:
-        raise ValueError("Input could not be empty")
+        _msg = "Input could not be empty"
+        raise ValueError(_msg)
 
     if debug:
         enable_debug_logging()
@@ -76,9 +79,7 @@ async def run_agent_workflow_async(
         "recursion_limit": 100,
     }
     last_message_cnt = 0
-    async for s in graph.astream(
-        input=initial_state, config=config, stream_mode="values"
-    ):
+    async for s in graph.astream(input=initial_state, config=config, stream_mode="values"):
         try:
             if isinstance(s, dict) and "messages" in s:
                 if len(s["messages"]) <= last_message_cnt:
@@ -86,18 +87,17 @@ async def run_agent_workflow_async(
                 last_message_cnt = len(s["messages"])
                 message = s["messages"][-1]
                 if isinstance(message, tuple):
-                    print(message)
+                    logger.info(f"[message] Output: {message}")
                 else:
                     message.pretty_print()
             else:
                 # For any other output format
-                print(f"Output: {s}")
-        except Exception as e:
-            logger.error(f"Error processing stream output: {e}")
-            print(f"Error processing output: {str(e)}")
+                logger.info(f"Output: {s}")
+        except Exception:
+            logger.exception("Error processing stream output")
 
     logger.info("Async workflow completed successfully")
 
 
 if __name__ == "__main__":
-    print(graph.get_graph(xray=True).draw_mermaid())
+    print(graph.get_graph(xray=True).draw_mermaid())  # noqa: T201

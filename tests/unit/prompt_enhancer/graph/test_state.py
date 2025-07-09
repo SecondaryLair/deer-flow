@@ -1,16 +1,13 @@
 # Copyright (c) 2025 Bytedance Ltd. and/or its affiliates
 # SPDX-License-Identifier: MIT
 
-import pytest
-from src.prompt_enhancer.graph.state import PromptEnhancerState
 from src.config.report_style import ReportStyle
+from src.prompt_enhancer.graph.state import PromptEnhancerState
 
 
 def test_prompt_enhancer_state_creation():
     """Test that PromptEnhancerState can be created with required fields."""
-    state = PromptEnhancerState(
-        prompt="Test prompt", context=None, report_style=None, output=None
-    )
+    state = PromptEnhancerState(prompt="Test prompt", context=None, report_style=None, output=None)
 
     assert state["prompt"] == "Test prompt"
     assert state["context"] is None

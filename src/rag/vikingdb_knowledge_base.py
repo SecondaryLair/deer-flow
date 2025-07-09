@@ -1,20 +1,20 @@
 # Copyright (c) 2025 Bytedance Ltd. and/or its affiliates
 # SPDX-License-Identifier: MIT
 
-import os
-import requests
 import json
-from src.rag.retriever import Chunk, Document, Resource, Retriever
+import os
 from urllib.parse import urlparse
+
+import requests
 from volcengine.auth.SignerV4 import SignerV4
 from volcengine.base.Request import Request
 from volcengine.Credentials import Credentials
 
+from src.rag.retriever import Chunk, Document, Resource, Retriever
+
 
 class VikingDBKnowledgeBaseProvider(Retriever):
-    """
-    VikingDBKnowledgeBaseProvider is a provider that uses VikingDB Knowledge base API to retrieve documents.
-    """
+    """VikingDBKnowledgeBaseProvider is a provider that uses VikingDB Knowledge base API to retrieve documents."""
 
     api_url: str
     api_ak: str
@@ -42,16 +42,10 @@ class VikingDBKnowledgeBaseProvider(Retriever):
             self.retrieval_size = int(retrieval_size)
 
     def prepare_request(self, method, path, params=None, data=None, doseq=0):
-        """
-        Prepare signed request using volcengine auth
-        """
+        """Prepare signed request using volcengine auth"""
         if params:
             for key in params:
-                if (
-                    type(params[key]) == int
-                    or type(params[key]) == float
-                    or type(params[key]) == bool
-                ):
+                if type(params[key]) == int or type(params[key]) == float or type(params[key]) == bool:
                     params[key] = str(params[key])
                 elif type(params[key]) == list:
                     if not doseq:
@@ -77,12 +71,8 @@ class VikingDBKnowledgeBaseProvider(Retriever):
         SignerV4.sign(r, credentials)
         return r
 
-    def query_relevant_documents(
-        self, query: str, resources: list[Resource] = []
-    ) -> list[Document]:
-        """
-        Query relevant documents from the knowledge base
-        """
+    def query_relevant_documents(self, query: str, resources: list[Resource] = []) -> list[Document]:
+        """Query relevant documents from the knowledge base"""
         if not resources:
             return []
 
@@ -113,12 +103,10 @@ class VikingDBKnowledgeBaseProvider(Retriever):
 
             method = "POST"
             path = "/api/knowledge/collection/search_knowledge"
-            info_req = self.prepare_request(
-                method=method, path=path, data=request_params
-            )
+            info_req = self.prepare_request(method=method, path=path, data=request_params)
             rsp = requests.request(
                 method=info_req.method,
-                url="http://{}{}".format(self.api_url, info_req.path),
+                url=f"http://{self.api_url}{info_req.path}",
                 headers=info_req.headers,
                 data=info_req.body,
             )
@@ -129,9 +117,7 @@ class VikingDBKnowledgeBaseProvider(Retriever):
                 raise ValueError(f"Failed to parse JSON response: {e}")
 
             if response["code"] != 0:
-                raise ValueError(
-                    f"Failed to query documents from resource: {response['message']}"
-                )
+                raise ValueError(f"Failed to query documents from resource: {response['message']}")
 
             rsp_data = response.get("data", {})
 
@@ -148,27 +134,21 @@ class VikingDBKnowledgeBaseProvider(Retriever):
                     continue
 
                 if doc_id not in all_documents:
-                    all_documents[doc_id] = Document(
-                        id=doc_id, title=doc_info.get("doc_name"), chunks=[]
-                    )
+                    all_documents[doc_id] = Document(id=doc_id, title=doc_info.get("doc_name"), chunks=[])
 
-                chunk = Chunk(
-                    content=item.get("content", ""), similarity=item.get("score", 0.0)
-                )
+                chunk = Chunk(content=item.get("content", ""), similarity=item.get("score", 0.0))
                 all_documents[doc_id].chunks.append(chunk)
 
         return list(all_documents.values())
 
     def list_resources(self, query: str | None = None) -> list[Resource]:
-        """
-        List resources (knowledge bases) from the knowledge base service
-        """
+        """List resources (knowledge bases) from the knowledge base service"""
         method = "POST"
         path = "/api/knowledge/collection/list"
         info_req = self.prepare_request(method=method, path=path)
         rsp = requests.request(
             method=info_req.method,
-            url="http://{}{}".format(self.api_url, info_req.path),
+            url=f"http://{self.api_url}{info_req.path}",
             headers=info_req.headers,
             data=info_req.body,
         )
@@ -178,7 +158,7 @@ class VikingDBKnowledgeBaseProvider(Retriever):
             raise ValueError(f"Failed to parse JSON response: {e}")
 
         if response["code"] != 0:
-            raise Exception(f"Failed to list resources: {response["message"]}")
+            raise Exception(f"Failed to list resources: {response['message']}")
 
         resources = []
         rsp_data = response.get("data", {})

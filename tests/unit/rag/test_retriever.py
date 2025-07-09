@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 import pytest
+
 from src.rag.retriever import Chunk, Document, Resource, Retriever
 
 
@@ -14,9 +15,7 @@ def test_chunk_init():
 def test_document_init_and_to_dict():
     chunk1 = Chunk(content="chunk1", similarity=0.8)
     chunk2 = Chunk(content="chunk2", similarity=0.7)
-    doc = Document(
-        id="doc1", url="http://example.com", title="Title", chunks=[chunk1, chunk2]
-    )
+    doc = Document(id="doc1", url="http://example.com", title="Title", chunks=[chunk1, chunk2])
     assert doc.id == "doc1"
     assert doc.url == "http://example.com"
     assert doc.title == "Title"
@@ -55,7 +54,7 @@ def test_retriever_abstract_methods():
         def list_resources(self, query=None):
             return [Resource(uri="uri", title="title")]
 
-        def query_relevant_documents(self, query, resources=[]):
+        def query_relevant_documents(self, query, resources=None):
             return [Document(id="id", chunks=[])]
 
     retriever = DummyRetriever()

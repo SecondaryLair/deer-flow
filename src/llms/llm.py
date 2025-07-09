@@ -1,15 +1,13 @@
 # Copyright (c) 2025 Bytedance Ltd. and/or its affiliates
 # SPDX-License-Identifier: MIT
 
-from pathlib import Path
-from typing import Any, Dict
 import os
-import ssl
-import httpx
+from pathlib import Path
+from typing import Any, get_args
 
-from langchain_openai import ChatOpenAI
+import httpx
 from langchain_deepseek import ChatDeepSeek
-from typing import get_args
+from langchain_openai import ChatOpenAI
 
 from src.config import load_yaml_config
 from src.config.agents import LLMType
@@ -32,9 +30,8 @@ def _get_llm_type_config_keys() -> dict[str, str]:
     }
 
 
-def _get_env_llm_conf(llm_type: str) -> Dict[str, Any]:
-    """
-    Get LLM configuration from environment variables.
+def _get_env_llm_conf(llm_type: str) -> dict[str, Any]:
+    """Get LLM configuration from environment variables.
     Environment variables should follow the format: {LLM_TYPE}__{KEY}
     e.g., BASIC_MODEL__api_key, BASIC_MODEL__base_url
     """
@@ -47,9 +44,7 @@ def _get_env_llm_conf(llm_type: str) -> Dict[str, Any]:
     return conf
 
 
-def _create_llm_use_conf(
-    llm_type: LLMType, conf: Dict[str, Any]
-) -> ChatOpenAI | ChatDeepSeek:
+def _create_llm_use_conf(llm_type: LLMType, conf: dict[str, Any]) -> ChatOpenAI | ChatDeepSeek:
     """Create LLM instance using configuration."""
     llm_type_config_keys = _get_llm_type_config_keys()
     config_key = llm_type_config_keys.get(llm_type)
@@ -83,19 +78,13 @@ def _create_llm_use_conf(
         merged_conf["http_client"] = http_client
         merged_conf["http_async_client"] = http_async_client
 
-    return (
-        ChatOpenAI(**merged_conf)
-        if llm_type != "reasoning"
-        else ChatDeepSeek(**merged_conf)
-    )
+    return ChatOpenAI(**merged_conf) if llm_type != "reasoning" else ChatDeepSeek(**merged_conf)
 
 
 def get_llm_by_type(
     llm_type: LLMType,
 ) -> ChatOpenAI:
-    """
-    Get LLM instance by type. Returns cached instance if available.
-    """
+    """Get LLM instance by type. Returns cached instance if available."""
     if llm_type in _llm_cache:
         return _llm_cache[llm_type]
 
@@ -106,11 +95,11 @@ def get_llm_by_type(
 
 
 def get_configured_llm_models() -> dict[str, list[str]]:
-    """
-    Get all configured LLM models grouped by type.
+    """Get all configured LLM models grouped by type.
 
     Returns:
         Dictionary mapping LLM type to list of configured model names.
+
     """
     try:
         conf = load_yaml_config(_get_config_file_path())

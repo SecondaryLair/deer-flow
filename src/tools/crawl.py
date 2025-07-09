@@ -5,9 +5,10 @@ import logging
 from typing import Annotated
 
 from langchain_core.tools import tool
-from .decorators import log_io
 
 from src.crawler import Crawler
+
+from .decorators import log_io
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +24,6 @@ def crawl_tool(
         article = crawler.crawl(url)
         return {"url": url, "crawled_content": article.to_markdown()[:1000]}
     except BaseException as e:
-        error_msg = f"Failed to crawl. Error: {repr(e)}"
+        error_msg = f"Failed to crawl. Error: {e!r}"
         logger.error(error_msg)
         return error_msg

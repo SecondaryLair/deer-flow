@@ -1,14 +1,12 @@
 # Copyright (c) 2025 Bytedance Ltd. and/or its affiliates
 # SPDX-License-Identifier: MIT
 
-import pytest
 import json
-from unittest.mock import patch
+
 from src.utils.json_utils import repair_json_output
 
 
 class TestRepairJsonOutput:
-
     def test_valid_json_object(self):
         """Test with valid JSON object"""
         content = '{"key": "value", "number": 123}'
@@ -87,18 +85,14 @@ class TestRepairJsonOutput:
         """Test with nested JSON object"""
         content = '{"outer": {"inner": {"deep": "value"}}}'
         result = repair_json_output(content)
-        expected = json.dumps(
-            {"outer": {"inner": {"deep": "value"}}}, ensure_ascii=False
-        )
+        expected = json.dumps({"outer": {"inner": {"deep": "value"}}}, ensure_ascii=False)
         assert result == expected
 
     def test_json_array_with_objects(self):
         """Test JSON array containing objects"""
         content = '[{"id": 1, "name": "test1"}, {"id": 2, "name": "test2"}]'
         result = repair_json_output(content)
-        expected = json.dumps(
-            [{"id": 1, "name": "test1"}, {"id": 2, "name": "test2"}], ensure_ascii=False
-        )
+        expected = json.dumps([{"id": 1, "name": "test1"}, {"id": 2, "name": "test2"}], ensure_ascii=False)
         assert result == expected
 
     def test_content_with_json_in_middle(self):

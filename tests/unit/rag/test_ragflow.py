@@ -1,10 +1,10 @@
 # Copyright (c) 2025 Bytedance Ltd. and/or its affiliates
 # SPDX-License-Identifier: MIT
 
-import os
+from unittest.mock import MagicMock, patch
+
 import pytest
-import requests
-from unittest.mock import patch, MagicMock
+
 from src.rag.ragflow import RAGFlowProvider, parse_uri
 
 
@@ -32,12 +32,11 @@ class DummyDocument:
 # Patch imports in ragflow.py to use dummy classes
 @pytest.fixture(autouse=True)
 def patch_imports(monkeypatch):
-    import src.rag.ragflow as ragflow
+    from src.rag import ragflow
 
     ragflow.Resource = DummyResource
     ragflow.Chunk = DummyChunk
     ragflow.Document = DummyDocument
-    yield
 
 
 def test_parse_uri_valid():
@@ -92,9 +91,7 @@ def test_query_relevant_documents_success(mock_post, monkeypatch):
     mock_response.json.return_value = {
         "data": {
             "doc_aggs": [{"doc_id": "doc456", "doc_name": "Doc Title"}],
-            "chunks": [
-                {"document_id": "doc456", "content": "chunk text", "similarity": 0.9}
-            ],
+            "chunks": [{"document_id": "doc456", "content": "chunk text", "similarity": 0.9}],
         }
     }
     mock_post.return_value = mock_response

@@ -3,15 +3,15 @@
 
 from src.config.tools import SELECTED_RAG_PROVIDER, RAGProvider
 from src.rag.ragflow import RAGFlowProvider
-from src.rag.vikingdb_knowledge_base import VikingDBKnowledgeBaseProvider
 from src.rag.retriever import Retriever
+from src.rag.vikingdb_knowledge_base import VikingDBKnowledgeBaseProvider
 
 
 def build_retriever() -> Retriever | None:
-    if SELECTED_RAG_PROVIDER == RAGProvider.RAGFLOW.value:
+    if RAGProvider.RAGFLOW.value == SELECTED_RAG_PROVIDER:
         return RAGFlowProvider()
-    elif SELECTED_RAG_PROVIDER == RAGProvider.VIKINGDB_KNOWLEDGE_BASE.value:
+    if RAGProvider.VIKINGDB_KNOWLEDGE_BASE.value == SELECTED_RAG_PROVIDER:
         return VikingDBKnowledgeBaseProvider()
-    elif SELECTED_RAG_PROVIDER:
+    if SELECTED_RAG_PROVIDER:
         raise ValueError(f"Unsupported RAG provider: {SELECTED_RAG_PROVIDER}")
     return None

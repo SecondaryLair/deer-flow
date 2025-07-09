@@ -1,9 +1,7 @@
 # Copyright (c) 2025 Bytedance Ltd. and/or its affiliates
 # SPDX-License-Identifier: MIT
 
-import pytest
 import src.crawler as crawler_module
-from src.crawler import Crawler
 
 
 def test_crawler_sets_article_url(monkeypatch):
@@ -25,9 +23,7 @@ def test_crawler_sets_article_url(monkeypatch):
             return DummyArticle()
 
     monkeypatch.setattr("src.crawler.crawler.JinaClient", DummyJinaClient)
-    monkeypatch.setattr(
-        "src.crawler.crawler.ReadabilityExtractor", DummyReadabilityExtractor
-    )
+    monkeypatch.setattr("src.crawler.crawler.ReadabilityExtractor", DummyReadabilityExtractor)
 
     crawler = crawler_module.Crawler()
     url = "http://example.com"
@@ -58,9 +54,7 @@ def test_crawler_calls_dependencies(monkeypatch):
             return DummyArticle()
 
     monkeypatch.setattr("src.crawler.crawler.JinaClient", DummyJinaClient)
-    monkeypatch.setattr(
-        "src.crawler.crawler.ReadabilityExtractor", DummyReadabilityExtractor
-    )
+    monkeypatch.setattr("src.crawler.crawler.ReadabilityExtractor", DummyReadabilityExtractor)
 
     crawler = crawler_module.Crawler()
     url = "http://example.com"

@@ -1,23 +1,26 @@
-from collections import namedtuple
 import json
+from collections import namedtuple
+from unittest.mock import MagicMock, patch
+
 import pytest
-import asyncio
-import types
-from unittest.mock import patch, MagicMock, AsyncMock
-from src.graph.nodes import planner_node
-from src.graph.nodes import human_feedback_node
-from src.graph.nodes import coordinator_node
-from src.graph.nodes import reporter_node
-from src.graph.nodes import _execute_agent_step
-from src.graph.nodes import _setup_and_execute_agent_step
-from src.graph.nodes import researcher_node
+
+from src.graph.nodes import (
+    _execute_agent_step,
+    _setup_and_execute_agent_step,
+    coordinator_node,
+    human_feedback_node,
+    planner_node,
+    reporter_node,
+    researcher_node,
+)
 
 # 在这里 mock 掉 get_llm_by_type，避免 ValueError
 with patch("src.llms.llm.get_llm_by_type", return_value=MagicMock()):
-    from langgraph.types import Command
-    from src.graph.nodes import background_investigation_node
-    from src.config import SearchEngine
     from langchain_core.messages import HumanMessage
+    from langgraph.types import Command
+
+    from src.config import SearchEngine
+    from src.graph.nodes import background_investigation_node
 
 
 # Mock data
@@ -104,14 +107,9 @@ def test_background_investigation_node_tavily(
 
         if search_engine == SearchEngine.TAVILY.value:
             mock_tavily_search.return_value.invoke.assert_called_once_with("test query")
-            assert (
-                results
-                == "## Test Title 1\n\nTest Content 1\n\n## Test Title 2\n\nTest Content 2"
-            )
+            assert results == "## Test Title 1\n\nTest Content 1\n\n## Test Title 2\n\nTest Content 2"
         else:
-            mock_web_search_tool.return_value.invoke.assert_called_once_with(
-                "test query"
-            )
+            mock_web_search_tool.return_value.invoke.assert_called_once_with("test query")
             assert len(json.loads(results)) == 2
 
 
@@ -394,7 +392,6 @@ def test_planner_node_json_decode_error_second_iteration(mock_state_planner):
 def patch_plan_and_repair(monkeypatch):
     monkeypatch.setattr("src.graph.nodes.Plan.model_validate", lambda x: x)
     monkeypatch.setattr("src.graph.nodes.repair_json_output", lambda x: x)
-    yield
 
 
 @pytest.fixture
@@ -457,31 +454,23 @@ def test_human_feedback_node_invalid_interrupt(monkeypatch, mock_state_base):
             human_feedback_node(state)
 
 
-def test_human_feedback_node_json_decode_error_first_iteration(
-    monkeypatch, mock_state_base
-):
+def test_human_feedback_node_json_decode_error_first_iteration(monkeypatch, mock_state_base):
     # repair_json_output returns bad json, json.loads raises JSONDecodeError, plan_iterations=0
     state = dict(mock_state_base)
     state["auto_accepted_plan"] = True
     state["plan_iterations"] = 0
-    with patch(
-        "src.graph.nodes.json.loads", side_effect=json.JSONDecodeError("err", "doc", 0)
-    ):
+    with patch("src.graph.nodes.json.loads", side_effect=json.JSONDecodeError("err", "doc", 0)):
         result = human_feedback_node(state)
         assert isinstance(result, Command)
         assert result.goto == "__end__"
 
 
-def test_human_feedback_node_json_decode_error_second_iteration(
-    monkeypatch, mock_state_base
-):
+def test_human_feedback_node_json_decode_error_second_iteration(monkeypatch, mock_state_base):
     # repair_json_output returns bad json, json.loads raises JSONDecodeError, plan_iterations>0
     state = dict(mock_state_base)
     state["auto_accepted_plan"] = True
     state["plan_iterations"] = 2
-    with patch(
-        "src.graph.nodes.json.loads", side_effect=json.JSONDecodeError("err", "doc", 0)
-    ):
+    with patch("src.graph.nodes.json.loads", side_effect=json.JSONDecodeError("err", "doc", 0)):
         result = human_feedback_node(state)
         assert isinstance(result, Command)
         assert result.goto == "reporter"
@@ -684,9 +673,7 @@ def test_coordinator_node_tool_calls_exception_handling(
                     raise Exception("bad args")
                 return super().get(key, default)
 
-        mock_llm.invoke.return_value = make_mock_llm_response(
-            [BadToolCall({"name": "handoff_to_planner"})]
-        )
+        mock_llm.invoke.return_value = make_mock_llm_response([BadToolCall({"name": "handoff_to_planner"})])
         mock_get_llm.return_value = mock_llm
 
         # Should not raise, just log error and continue
@@ -773,9 +760,7 @@ def test_reporter_node_basic(
         patch("src.graph.nodes.get_llm_by_type") as mock_get_llm,
     ):
         mock_llm = MagicMock()
-        mock_llm.invoke.return_value = make_mock_llm_response_reporter(
-            "Final Report Content"
-        )
+        mock_llm.invoke.return_value = make_mock_llm_response_reporter("Final Report Content")
         mock_get_llm.return_value = mock_llm
 
         result = reporter_node(mock_state_reporter, MagicMock())
@@ -800,9 +785,7 @@ def test_reporter_node_with_observations(
         patch("src.graph.nodes.get_llm_by_type") as mock_get_llm,
     ):
         mock_llm = MagicMock()
-        mock_llm.invoke.return_value = make_mock_llm_response_reporter(
-            "Report with Observations"
-        )
+        mock_llm.invoke.return_value = make_mock_llm_response_reporter("Report with Observations")
         mock_get_llm.return_value = mock_llm
 
         result = reporter_node(mock_state_reporter_with_observations, MagicMock())
@@ -833,9 +816,7 @@ def test_reporter_node_locale_default(
         patch("src.graph.nodes.get_llm_by_type") as mock_get_llm,
     ):
         mock_llm = MagicMock()
-        mock_llm.invoke.return_value = make_mock_llm_response_reporter(
-            "Default Locale Report"
-        )
+        mock_llm.invoke.return_value = make_mock_llm_response_reporter("Default Locale Report")
         mock_get_llm.return_value = mock_llm
 
         result = reporter_node(state, MagicMock())
@@ -910,9 +891,7 @@ async def test_execute_agent_step_basic(mock_state_with_steps, mock_agent):
         "src.graph.nodes.HumanMessage",
         side_effect=lambda content, name=None: MagicMock(content=content, name=name),
     ):
-        result = await _execute_agent_step(
-            mock_state_with_steps, mock_agent, "researcher"
-        )
+        result = await _execute_agent_step(mock_state_with_steps, mock_agent, "researcher")
         assert isinstance(result, Command)
         assert result.goto == "research_team"
         assert "messages" in result.update
@@ -920,21 +899,14 @@ async def test_execute_agent_step_basic(mock_state_with_steps, mock_agent):
         # The new observation should be appended
         assert result.update["observations"][-1] == "result content"
         # The step's execution_res should be updated
-        assert (
-            mock_state_with_steps["current_plan"].steps[1].execution_res
-            == "result content"
-        )
+        assert mock_state_with_steps["current_plan"].steps[1].execution_res == "result content"
 
 
 @pytest.mark.asyncio
-async def test_execute_agent_step_no_unexecuted_step(
-    mock_state_no_unexecuted, mock_agent
-):
+async def test_execute_agent_step_no_unexecuted_step(mock_state_no_unexecuted, mock_agent):
     # Should return Command with goto="research_team" and not fail
     with patch("src.graph.nodes.logger") as mock_logger:
-        result = await _execute_agent_step(
-            mock_state_no_unexecuted, mock_agent, "researcher"
-        )
+        result = await _execute_agent_step(mock_state_no_unexecuted, mock_agent, "researcher")
         assert isinstance(result, Command)
         assert result.goto == "research_team"
         mock_logger.warning.assert_called_with("No unexecuted step found")
@@ -974,18 +946,14 @@ async def test_execute_agent_step_with_resources_and_researcher(mock_step):
 
 
 @pytest.mark.asyncio
-async def test_execute_agent_step_recursion_limit_env(
-    monkeypatch, mock_state_with_steps, mock_agent
-):
+async def test_execute_agent_step_recursion_limit_env(monkeypatch, mock_state_with_steps, mock_agent):
     # Should respect AGENT_RECURSION_LIMIT env variable if set and valid
     monkeypatch.setenv("AGENT_RECURSION_LIMIT", "42")
     with (
         patch("src.graph.nodes.logger") as mock_logger,
         patch(
             "src.graph.nodes.HumanMessage",
-            side_effect=lambda content, name=None: MagicMock(
-                content=content, name=name
-            ),
+            side_effect=lambda content, name=None: MagicMock(content=content, name=name),
         ),
     ):
         result = await _execute_agent_step(mock_state_with_steps, mock_agent, "coder")
@@ -994,40 +962,30 @@ async def test_execute_agent_step_recursion_limit_env(
 
 
 @pytest.mark.asyncio
-async def test_execute_agent_step_recursion_limit_env_invalid(
-    monkeypatch, mock_state_with_steps, mock_agent
-):
+async def test_execute_agent_step_recursion_limit_env_invalid(monkeypatch, mock_state_with_steps, mock_agent):
     # Should fallback to default if env variable is invalid
     monkeypatch.setenv("AGENT_RECURSION_LIMIT", "notanint")
     with (
         patch("src.graph.nodes.logger") as mock_logger,
         patch(
             "src.graph.nodes.HumanMessage",
-            side_effect=lambda content, name=None: MagicMock(
-                content=content, name=name
-            ),
+            side_effect=lambda content, name=None: MagicMock(content=content, name=name),
         ),
     ):
         result = await _execute_agent_step(mock_state_with_steps, mock_agent, "coder")
         assert isinstance(result, Command)
-        mock_logger.warning.assert_any_call(
-            "Invalid AGENT_RECURSION_LIMIT value: 'notanint'. Using default value 25."
-        )
+        mock_logger.warning.assert_any_call("Invalid AGENT_RECURSION_LIMIT value: 'notanint'. Using default value 25.")
 
 
 @pytest.mark.asyncio
-async def test_execute_agent_step_recursion_limit_env_negative(
-    monkeypatch, mock_state_with_steps, mock_agent
-):
+async def test_execute_agent_step_recursion_limit_env_negative(monkeypatch, mock_state_with_steps, mock_agent):
     # Should fallback to default if env variable is negative or zero
     monkeypatch.setenv("AGENT_RECURSION_LIMIT", "-5")
     with (
         patch("src.graph.nodes.logger") as mock_logger,
         patch(
             "src.graph.nodes.HumanMessage",
-            side_effect=lambda content, name=None: MagicMock(
-                content=content, name=name
-            ),
+            side_effect=lambda content, name=None: MagicMock(content=content, name=name),
         ),
     ):
         result = await _execute_agent_step(mock_state_with_steps, mock_agent, "coder")
@@ -1111,9 +1069,7 @@ def patch_execute_agent_step():
     async def fake_execute_agent_step(state, agent, agent_type):
         return "EXECUTED"
 
-    with patch(
-        "src.graph.nodes._execute_agent_step", side_effect=fake_execute_agent_step
-    ) as mock:
+    with patch("src.graph.nodes._execute_agent_step", side_effect=fake_execute_agent_step) as mock:
         yield mock
 
 
@@ -1139,9 +1095,7 @@ def patch_multiserver_mcp_client():
                 FakeTool("toolC", "descC"),
             ]
 
-    with patch(
-        "src.graph.nodes.MultiServerMCPClient", return_value=FakeClient()
-    ) as mock:
+    with patch("src.graph.nodes.MultiServerMCPClient", return_value=FakeClient()) as mock:
         yield mock
 
 

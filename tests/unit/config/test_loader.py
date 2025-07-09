@@ -1,10 +1,9 @@
 # Copyright (c) 2025 Bytedance Ltd. and/or its affiliates
 # SPDX-License-Identifier: MIT
 
-import os
 import tempfile
-import yaml
-import pytest
+from pathlib import Path
+
 from src.config.loader import load_yaml_config, process_dict, replace_env_vars
 
 
@@ -64,7 +63,7 @@ def test_load_yaml_config(monkeypatch):
         assert config["nested"]["key3"] == "my_value"
         assert config["nested"]["key4"] == 123
     finally:
-        os.remove(tmp_path)
+        Path.unlink(Path(tmp_path))
 
 
 def test_load_yaml_config_cache(monkeypatch):
@@ -80,4 +79,4 @@ def test_load_yaml_config_cache(monkeypatch):
         assert config1 is config2  # Should be cached (same object)
         assert config1["foo"] == "cache_value"
     finally:
-        os.remove(tmp_path)
+        Path.unlink(Path(tmp_path))

@@ -1,10 +1,9 @@
 # Copyright (c) 2025 Bytedance Ltd. and/or its affiliates
 # SPDX-License-Identifier: MIT
 
-import pytest
-import logging
-from unittest.mock import Mock, call, patch, MagicMock
-from src.tools.decorators import LoggedToolMixin, create_logged_tool
+from unittest.mock import Mock, call, patch
+
+from src.tools.decorators import create_logged_tool
 
 
 class MockBaseTool:
@@ -15,7 +14,6 @@ class MockBaseTool:
 
 
 class TestLoggedToolMixin:
-
     def test_run_calls_log_operation(self):
         """Test that _run calls _log_operation with correct parameters."""
         # Create a logged tool instance
@@ -40,9 +38,7 @@ class TestLoggedToolMixin:
         tool = LoggedTool()
 
         # Mock the parent _run method
-        with patch.object(
-            MockBaseTool, "_run", return_value="mocked_result"
-        ) as mock_super_run:
+        with patch.object(MockBaseTool, "_run", return_value="mocked_result") as mock_super_run:
             args = ("arg1", "arg2")
             kwargs = {"key1": "value1"}
             result = tool._run(*args, **kwargs)

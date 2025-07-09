@@ -1,13 +1,14 @@
 # Copyright (c) 2025 Bytedance Ltd. and/or its affiliates
 # SPDX-License-Identifier: MIT
 
+from unittest.mock import patch
+
 import pytest
-from unittest.mock import Mock, patch, MagicMock
+
 from src.tools.python_repl import python_repl_tool
 
 
 class TestPythonReplTool:
-
     @patch("src.tools.python_repl.repl")
     @patch("src.tools.python_repl.logger")
     def test_successful_code_execution(self, mock_logger, mock_repl):
@@ -37,9 +38,7 @@ class TestPythonReplTool:
             python_repl_tool(invalid_code)
 
         # Verify that it's a validation error
-        assert "ValidationError" in str(
-            type(exc_info.value)
-        ) or "validation error" in str(exc_info.value)
+        assert "ValidationError" in str(type(exc_info.value)) or "validation error" in str(exc_info.value)
 
         # The REPL should not be called since validation fails first
         mock_repl.run.assert_not_called()

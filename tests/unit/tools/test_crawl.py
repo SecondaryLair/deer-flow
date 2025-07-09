@@ -1,18 +1,15 @@
-import pytest
 from unittest.mock import Mock, patch
+
 from src.tools.crawl import crawl_tool
 
 
 class TestCrawlTool:
-
     @patch("src.tools.crawl.Crawler")
     def test_crawl_tool_success(self, mock_crawler_class):
         # Arrange
         mock_crawler = Mock()
         mock_article = Mock()
-        mock_article.to_markdown.return_value = (
-            "# Test Article\nThis is test content." * 100
-        )
+        mock_article.to_markdown.return_value = "# Test Article\nThis is test content." * 100
         mock_crawler.crawl.return_value = mock_article
         mock_crawler_class.return_value = mock_crawler
 
@@ -69,9 +66,7 @@ class TestCrawlTool:
 
     @patch("src.tools.crawl.Crawler")
     @patch("src.tools.crawl.logger")
-    def test_crawl_tool_crawler_instantiation_exception(
-        self, mock_logger, mock_crawler_class
-    ):
+    def test_crawl_tool_crawler_instantiation_exception(self, mock_logger, mock_crawler_class):
         # Arrange
         mock_crawler_class.side_effect = Exception("Crawler init error")
 
@@ -88,9 +83,7 @@ class TestCrawlTool:
 
     @patch("src.tools.crawl.Crawler")
     @patch("src.tools.crawl.logger")
-    def test_crawl_tool_markdown_conversion_exception(
-        self, mock_logger, mock_crawler_class
-    ):
+    def test_crawl_tool_markdown_conversion_exception(self, mock_logger, mock_crawler_class):
         # Arrange
         mock_crawler = Mock()
         mock_article = Mock()

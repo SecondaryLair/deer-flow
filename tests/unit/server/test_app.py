@@ -1,28 +1,16 @@
 # Copyright (c) 2025 Bytedance Ltd. and/or its affiliates
 # SPDX-License-Identifier: MIT
 
-import base64
-import json
-import os
-from unittest.mock import AsyncMock, MagicMock, patch, mock_open
-from uuid import uuid4
-from fastapi.responses import JSONResponse, StreamingResponse
-import pytest
-from fastapi.testclient import TestClient
-from fastapi import HTTPException, logger
-from src.server.app import app, _make_event, _astream_workflow_generator
-from src.server.mcp_request import MCPServerMetadataRequest
-from src.server.rag_request import RAGResourceRequest
-from src.config.report_style import ReportStyle
-from langgraph.types import Command
-from langchain_core.messages import ToolMessage
-from langchain_core.messages import AIMessageChunk
+from unittest.mock import MagicMock, patch
 
-from src.server.chat_request import (
-    ChatRequest,
-    EnhancePromptRequest,
-    GenerateProseRequest,
-)
+import pytest
+from fastapi import HTTPException
+from fastapi.testclient import TestClient
+from langchain_core.messages import AIMessageChunk, ToolMessage
+from langgraph.types import Command
+
+from src.config.report_style import ReportStyle
+from src.server.app import _astream_workflow_generator, _make_event, app
 
 
 @pytest.fixture
@@ -35,9 +23,7 @@ class TestMakeEvent:
         event_type = "message_chunk"
         data = {"content": "Hello", "role": "assistant"}
         result = _make_event(event_type, data)
-        expected = (
-            'event: message_chunk\ndata: {"content": "Hello", "role": "assistant"}\n\n'
-        )
+        expected = 'event: message_chunk\ndata: {"content": "Hello", "role": "assistant"}\n\n'
         assert result == expected
 
     def test_make_event_with_empty_content(self):
@@ -51,9 +37,7 @@ class TestMakeEvent:
         event_type = "tool_calls"
         data = {"role": "assistant", "tool_calls": []}
         result = _make_event(event_type, data)
-        expected = (
-            'event: tool_calls\ndata: {"role": "assistant", "tool_calls": []}\n\n'
-        )
+        expected = 'event: tool_calls\ndata: {"role": "assistant", "tool_calls": []}\n\n'
         assert result == expected
 
 
@@ -110,9 +94,7 @@ class TestEnhancePromptEndpoint:
 class TestMCPEndpoint:
     @patch("src.server.app.load_mcp_tools")
     def test_mcp_server_metadata_success(self, mock_load_tools, client):
-        mock_load_tools.return_value = [
-            {"name": "test_tool", "description": "Test tool"}
-        ]
+        mock_load_tools.return_value = [{"name": "test_tool", "description": "Test tool"}]
 
         request_data = {
             "transport": "stdio",
@@ -146,9 +128,7 @@ class TestMCPEndpoint:
 
     @patch("src.server.app.load_mcp_tools")
     def test_mcp_server_metadata_with_exception(self, mock_load_tools, client):
-        mock_load_tools.side_effect = HTTPException(
-            status_code=400, detail="MCP Server Error"
-        )
+        mock_load_tools.side_effect = HTTPException(status_code=400, detail="MCP Server Error")
 
         request_data = {
             "transport": "stdio",
@@ -277,7 +257,6 @@ class TestAstreamWorkflowGenerator:
     @pytest.mark.asyncio
     @patch("src.server.app.graph")
     async def test_astream_workflow_generator_with_interrupt_feedback(self, mock_graph):
-
         # Mock the async stream
         async def mock_astream(*args, **kwargs):
             # Verify that Command is passed as input when interrupt_feedback is provided
@@ -350,7 +329,6 @@ class TestAstreamWorkflowGenerator:
     @pytest.mark.asyncio
     @patch("src.server.app.graph")
     async def test_astream_workflow_generator_tool_message(self, mock_graph):
-
         # Mock tool message
         mock_tool_message = ToolMessage(content="Tool result", tool_call_id="tool_123")
         mock_tool_message.id = "msg_456"
@@ -386,10 +364,7 @@ class TestAstreamWorkflowGenerator:
 
     @pytest.mark.asyncio
     @patch("src.server.app.graph")
-    async def test_astream_workflow_generator_ai_message_with_tool_calls(
-        self, mock_graph
-    ):
-
+    async def test_astream_workflow_generator_ai_message_with_tool_calls(self, mock_graph):
         # Mock AI message with tool calls
         mock_ai_message = AIMessageChunk(content="Making tool call")
         mock_ai_message.id = "msg_789"
@@ -428,10 +403,7 @@ class TestAstreamWorkflowGenerator:
 
     @pytest.mark.asyncio
     @patch("src.server.app.graph")
-    async def test_astream_workflow_generator_ai_message_with_tool_call_chunks(
-        self, mock_graph
-    ):
-
+    async def test_astream_workflow_generator_ai_message_with_tool_call_chunks(self, mock_graph):
         # Mock AI message with only tool call chunks
         mock_ai_message = AIMessageChunk(content="Streaming tool call")
         mock_ai_message.id = "msg_101"
@@ -470,7 +442,6 @@ class TestAstreamWorkflowGenerator:
     @pytest.mark.asyncio
     @patch("src.server.app.graph")
     async def test_astream_workflow_generator_with_finish_reason(self, mock_graph):
-
         # Mock AI message with finish reason
         mock_ai_message = AIMessageChunk(content="Complete response")
         mock_ai_message.id = "msg_finish"
@@ -510,7 +481,6 @@ class TestAstreamWorkflowGenerator:
     @pytest.mark.asyncio
     @patch("src.server.app.graph")
     async def test_astream_workflow_generator_config_passed_correctly(self, mock_graph):
-
         mock_ai_message = AIMessageChunk(content="Test")
         mock_ai_message.id = "test_id"
         mock_ai_message.response_metadata = {}
