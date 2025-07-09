@@ -34,17 +34,16 @@ dependencies = [
     "langchain-mcp-adapters>=0.0.9",
     "langchain-deepseek>=0.1.3",
     "volcengine>=1.0.191",
+    "dowhen>=0.1.0",
 ]
 
-[project.optional-dependencies]
+[dependency-groups]
 dev = [
-    "black>=24.2.0",
-    "langgraph-cli[inmem]>=0.2.10",
-]
-test = [
+    "ruff>=0.12.2",
     "pytest>=7.4.0",
     "pytest-cov>=4.1.0",
     "pytest-asyncio>=1.0.0",
+    "langgraph-cli[inmem]>=0.2.10",
 ]
 
 [tool.pytest.ini_options]
@@ -62,12 +61,50 @@ fail_under = 25
 [tool.hatch.build.targets.wheel]
 packages = ["src"]
 
-[tool.black]
-line-length = 88
-target-version = ["py312"]
-include = '\.pyi?$'
-extend-exclude = '''
-# A regex preceded with ^/ will apply only to files and directories
-# in the root of the project.
-^/build/
-'''
+[tool.ruff]
+line-length = 120
+indent-width = 4
+target-version = "py312" # use minimum version
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = ["COM812", "D213", "D203"]
+
+fixable = ["ALL"]
+unfixable = []
+
+[tool.ruff.lint.per-file-ignores]
+"**/{src}/*" = [
+    "G004",
+]
+"**/{tests,docs,examples,benchmarks}/*" = [
+    "S",
+    "D",
+    "ANN",
+    "SLF",
+    "ARG",
+    "PLR",
+    "INP",
+    "RET",
+    "N",
+    "SIM",
+    "PT",
+    "F",
+    "PERF",
+    "A",
+    "B",
+    "PLC",
+    "PYI",
+    "PTH",
+    "EM",
+    "TRY",
+    "ERA",
+    "RUF"
+]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+docstring-code-format = true
+docstring-code-line-length = "dynamic"
