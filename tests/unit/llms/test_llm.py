@@ -3,7 +3,7 @@
 
 import pytest
 
-from src.llms import llm
+from deerflowx.llms import llm
 
 
 class DummyChatOpenAI:

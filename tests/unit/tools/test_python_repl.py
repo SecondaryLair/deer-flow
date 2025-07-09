@@ -5,12 +5,12 @@ from unittest.mock import patch
 
 import pytest
 
-from src.tools.python_repl import python_repl_tool
+from deerflowx.tools.python_repl import python_repl_tool
 
 
 class TestPythonReplTool:
-    @patch("src.tools.python_repl.repl")
-    @patch("src.tools.python_repl.logger")
+    @patch("deerflowx.tools.python_repl.repl")
+    @patch("deerflowx.tools.python_repl.logger")
     def test_successful_code_execution(self, mock_logger, mock_repl):
         # Arrange
         code = "print('Hello, World!')"
@@ -27,8 +27,8 @@ class TestPythonReplTool:
         assert code in result
         assert expected_output in result
 
-    @patch("src.tools.python_repl.repl")
-    @patch("src.tools.python_repl.logger")
+    @patch("deerflowx.tools.python_repl.repl")
+    @patch("deerflowx.tools.python_repl.logger")
     def test_invalid_input_type(self, mock_logger, mock_repl):
         # Arrange
         invalid_code = 123
@@ -43,8 +43,8 @@ class TestPythonReplTool:
         # The REPL should not be called since validation fails first
         mock_repl.run.assert_not_called()
 
-    @patch("src.tools.python_repl.repl")
-    @patch("src.tools.python_repl.logger")
+    @patch("deerflowx.tools.python_repl.repl")
+    @patch("deerflowx.tools.python_repl.logger")
     def test_code_execution_with_error_in_result(self, mock_logger, mock_repl):
         # Arrange
         code = "invalid_function()"
@@ -61,8 +61,8 @@ class TestPythonReplTool:
         assert code in result
         assert error_result in result
 
-    @patch("src.tools.python_repl.repl")
-    @patch("src.tools.python_repl.logger")
+    @patch("deerflowx.tools.python_repl.repl")
+    @patch("deerflowx.tools.python_repl.logger")
     def test_code_execution_with_exception_in_result(self, mock_logger, mock_repl):
         # Arrange
         code = "1/0"
@@ -79,8 +79,8 @@ class TestPythonReplTool:
         assert code in result
         assert exception_result in result
 
-    @patch("src.tools.python_repl.repl")
-    @patch("src.tools.python_repl.logger")
+    @patch("deerflowx.tools.python_repl.repl")
+    @patch("deerflowx.tools.python_repl.logger")
     def test_code_execution_raises_exception(self, mock_logger, mock_repl):
         # Arrange
         code = "print('test')"
@@ -97,8 +97,8 @@ class TestPythonReplTool:
         assert code in result
         assert repr(exception) in result
 
-    @patch("src.tools.python_repl.repl")
-    @patch("src.tools.python_repl.logger")
+    @patch("deerflowx.tools.python_repl.repl")
+    @patch("deerflowx.tools.python_repl.logger")
     def test_successful_execution_with_calculation(self, mock_logger, mock_repl):
         # Arrange
         code = "result = 2 + 3\nprint(result)"
@@ -116,8 +116,8 @@ class TestPythonReplTool:
         assert code in result
         assert expected_output in result
 
-    @patch("src.tools.python_repl.repl")
-    @patch("src.tools.python_repl.logger")
+    @patch("deerflowx.tools.python_repl.repl")
+    @patch("deerflowx.tools.python_repl.logger")
     def test_empty_string_code(self, mock_logger, mock_repl):
         # Arrange
         code = ""
@@ -131,8 +131,8 @@ class TestPythonReplTool:
         mock_logger.info.assert_called_with("Code execution successful")
         assert "Successfully executed:" in result
 
-    @patch("src.tools.python_repl.repl")
-    @patch("src.tools.python_repl.logger")
+    @patch("deerflowx.tools.python_repl.repl")
+    @patch("deerflowx.tools.python_repl.logger")
     def test_logging_calls(self, mock_logger, mock_repl):
         # Arrange
         code = "x = 1"

@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-import src.graph.builder as builder_mod
+import deerflowx.graph.builder as builder_mod
 
 
 @pytest.fixture
@@ -75,7 +75,7 @@ def test_continue_to_running_research_team_default_planner(mock_state):
     assert builder_mod.continue_to_running_research_team(state) == "planner"
 
 
-@patch("src.graph.builder.StateGraph")
+@patch("deerflowx.graph.builder.StateGraph")
 def test_build_base_graph_adds_nodes_and_edges(MockStateGraph):
     mock_builder = MagicMock()
     MockStateGraph.return_value = mock_builder
@@ -88,8 +88,8 @@ def test_build_base_graph_adds_nodes_and_edges(MockStateGraph):
     mock_builder.add_conditional_edges.assert_called_once()
 
 
-@patch("src.graph.builder._build_base_graph")
-@patch("src.graph.builder.MemorySaver")
+@patch("deerflowx.graph.builder._build_base_graph")
+@patch("deerflowx.graph.builder.MemorySaver")
 def test_build_graph_with_memory_uses_memory(MockMemorySaver, mock_build_base_graph):
     mock_builder = MagicMock()
     mock_build_base_graph.return_value = mock_builder
@@ -101,7 +101,7 @@ def test_build_graph_with_memory_uses_memory(MockMemorySaver, mock_build_base_gr
     mock_builder.compile.assert_called_once_with(checkpointer=mock_memory)
 
 
-@patch("src.graph.builder._build_base_graph")
+@patch("deerflowx.graph.builder._build_base_graph")
 def test_build_graph_without_memory(mock_build_base_graph):
     mock_builder = MagicMock()
     mock_build_base_graph.return_value = mock_builder
@@ -113,10 +113,10 @@ def test_build_graph_without_memory(mock_build_base_graph):
 
 def test_graph_is_compiled():
     # The graph object should be the result of build_graph()
-    with patch("src.graph.builder._build_base_graph") as mock_base:
+    with patch("deerflowx.graph.builder._build_base_graph") as mock_base:
         mock_builder = MagicMock()
         mock_base.return_value = mock_builder
         mock_builder.compile.return_value = "compiled_graph"
         # reload the module to re-run the graph assignment
-        importlib.reload(sys.modules["src.graph.builder"])
+        importlib.reload(sys.modules["deerflowx.graph.builder"])
         assert builder_mod.graph is not None

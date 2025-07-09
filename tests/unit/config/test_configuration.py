@@ -4,16 +4,16 @@
 import sys
 import types
 
-from src.config.configuration import Configuration
+from deerflowx.config.configuration import Configuration
 
 # Patch sys.path so relative import works
 
 # Patch Resource for import
 mock_resource = type("Resource", (), {})
 
-# Patch src.rag.retriever.Resource for import
+# Patch deerflowx.rag.retriever.Resource for import
 
-module_name = "src.rag.retriever"
+module_name = "deerflowx.rag.retriever"
 if module_name not in sys.modules:
     retriever_mod = types.ModuleType(module_name)
     retriever_mod.Resource = mock_resource

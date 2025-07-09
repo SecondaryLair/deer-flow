@@ -6,9 +6,9 @@ from unittest.mock import MagicMock, patch
 import pytest
 from langchain.schema import HumanMessage, SystemMessage
 
-from src.config.report_style import ReportStyle
-from src.prompt_enhancer.graph.enhancer_node import prompt_enhancer_node
-from src.prompt_enhancer.graph.state import PromptEnhancerState
+from deerflowx.config.report_style import ReportStyle
+from deerflowx.prompt_enhancer.graph.enhancer_node import prompt_enhancer_node
+from deerflowx.prompt_enhancer.graph.state import PromptEnhancerState
 
 
 @pytest.fixture
@@ -31,10 +31,10 @@ def mock_messages():
 class TestPromptEnhancerNode:
     """Test cases for prompt_enhancer_node function."""
 
-    @patch("src.prompt_enhancer.graph.enhancer_node.apply_prompt_template")
-    @patch("src.prompt_enhancer.graph.enhancer_node.get_llm_by_type")
+    @patch("deerflowx.prompt_enhancer.graph.enhancer_node.apply_prompt_template")
+    @patch("deerflowx.prompt_enhancer.graph.enhancer_node.get_llm_by_type")
     @patch(
-        "src.prompt_enhancer.graph.enhancer_node.AGENT_LLM_MAP",
+        "deerflowx.prompt_enhancer.graph.enhancer_node.AGENT_LLM_MAP",
         {"prompt_enhancer": "basic"},
     )
     def test_basic_prompt_enhancement(self, mock_get_llm, mock_apply_template, mock_llm, mock_messages):
@@ -60,10 +60,10 @@ class TestPromptEnhancerNode:
         # Verify result
         assert result == {"output": "Enhanced test prompt"}
 
-    @patch("src.prompt_enhancer.graph.enhancer_node.apply_prompt_template")
-    @patch("src.prompt_enhancer.graph.enhancer_node.get_llm_by_type")
+    @patch("deerflowx.prompt_enhancer.graph.enhancer_node.apply_prompt_template")
+    @patch("deerflowx.prompt_enhancer.graph.enhancer_node.get_llm_by_type")
     @patch(
-        "src.prompt_enhancer.graph.enhancer_node.AGENT_LLM_MAP",
+        "deerflowx.prompt_enhancer.graph.enhancer_node.AGENT_LLM_MAP",
         {"prompt_enhancer": "basic"},
     )
     def test_prompt_enhancement_with_report_style(self, mock_get_llm, mock_apply_template, mock_llm, mock_messages):
@@ -84,10 +84,10 @@ class TestPromptEnhancerNode:
         # Verify result
         assert result == {"output": "Enhanced test prompt"}
 
-    @patch("src.prompt_enhancer.graph.enhancer_node.apply_prompt_template")
-    @patch("src.prompt_enhancer.graph.enhancer_node.get_llm_by_type")
+    @patch("deerflowx.prompt_enhancer.graph.enhancer_node.apply_prompt_template")
+    @patch("deerflowx.prompt_enhancer.graph.enhancer_node.get_llm_by_type")
     @patch(
-        "src.prompt_enhancer.graph.enhancer_node.AGENT_LLM_MAP",
+        "deerflowx.prompt_enhancer.graph.enhancer_node.AGENT_LLM_MAP",
         {"prompt_enhancer": "basic"},
     )
     def test_prompt_enhancement_with_context(self, mock_get_llm, mock_apply_template, mock_llm, mock_messages):
@@ -112,10 +112,10 @@ class TestPromptEnhancerNode:
 
         assert result == {"output": "Enhanced test prompt"}
 
-    @patch("src.prompt_enhancer.graph.enhancer_node.apply_prompt_template")
-    @patch("src.prompt_enhancer.graph.enhancer_node.get_llm_by_type")
+    @patch("deerflowx.prompt_enhancer.graph.enhancer_node.apply_prompt_template")
+    @patch("deerflowx.prompt_enhancer.graph.enhancer_node.get_llm_by_type")
     @patch(
-        "src.prompt_enhancer.graph.enhancer_node.AGENT_LLM_MAP",
+        "deerflowx.prompt_enhancer.graph.enhancer_node.AGENT_LLM_MAP",
         {"prompt_enhancer": "basic"},
     )
     def test_error_handling(self, mock_get_llm, mock_apply_template, mock_llm, mock_messages):
@@ -132,10 +132,10 @@ class TestPromptEnhancerNode:
         # Should return original prompt on error
         assert result == {"output": "Test prompt"}
 
-    @patch("src.prompt_enhancer.graph.enhancer_node.apply_prompt_template")
-    @patch("src.prompt_enhancer.graph.enhancer_node.get_llm_by_type")
+    @patch("deerflowx.prompt_enhancer.graph.enhancer_node.apply_prompt_template")
+    @patch("deerflowx.prompt_enhancer.graph.enhancer_node.get_llm_by_type")
     @patch(
-        "src.prompt_enhancer.graph.enhancer_node.AGENT_LLM_MAP",
+        "deerflowx.prompt_enhancer.graph.enhancer_node.AGENT_LLM_MAP",
         {"prompt_enhancer": "basic"},
     )
     def test_template_error_handling(self, mock_get_llm, mock_apply_template, mock_llm, mock_messages):
@@ -151,10 +151,10 @@ class TestPromptEnhancerNode:
         # Should return original prompt on error
         assert result == {"output": "Test prompt"}
 
-    @patch("src.prompt_enhancer.graph.enhancer_node.apply_prompt_template")
-    @patch("src.prompt_enhancer.graph.enhancer_node.get_llm_by_type")
+    @patch("deerflowx.prompt_enhancer.graph.enhancer_node.apply_prompt_template")
+    @patch("deerflowx.prompt_enhancer.graph.enhancer_node.get_llm_by_type")
     @patch(
-        "src.prompt_enhancer.graph.enhancer_node.AGENT_LLM_MAP",
+        "deerflowx.prompt_enhancer.graph.enhancer_node.AGENT_LLM_MAP",
         {"prompt_enhancer": "basic"},
     )
     def test_prefix_removal(self, mock_get_llm, mock_apply_template, mock_llm, mock_messages):
@@ -180,10 +180,10 @@ class TestPromptEnhancerNode:
 
             assert result == {"output": "This is the enhanced prompt"}
 
-    @patch("src.prompt_enhancer.graph.enhancer_node.apply_prompt_template")
-    @patch("src.prompt_enhancer.graph.enhancer_node.get_llm_by_type")
+    @patch("deerflowx.prompt_enhancer.graph.enhancer_node.apply_prompt_template")
+    @patch("deerflowx.prompt_enhancer.graph.enhancer_node.get_llm_by_type")
     @patch(
-        "src.prompt_enhancer.graph.enhancer_node.AGENT_LLM_MAP",
+        "deerflowx.prompt_enhancer.graph.enhancer_node.AGENT_LLM_MAP",
         {"prompt_enhancer": "basic"},
     )
     def test_whitespace_handling(self, mock_get_llm, mock_apply_template, mock_llm, mock_messages):

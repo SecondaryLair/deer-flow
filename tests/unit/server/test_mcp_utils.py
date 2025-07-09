@@ -6,11 +6,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from fastapi import HTTPException
 
-from src.server import mcp_utils
+from deerflowx.server import mcp_utils
 
 
 @pytest.mark.asyncio
-@patch("src.server.mcp_utils.ClientSession")
+@patch("deerflowx.server.mcp_utils.ClientSession")
 async def test__get_tools_from_client_session_success(mock_ClientSession):
     mock_read = AsyncMock()
     mock_write = AsyncMock()
@@ -34,9 +34,9 @@ async def test__get_tools_from_client_session_success(mock_ClientSession):
 
 
 @pytest.mark.asyncio
-@patch("src.server.mcp_utils._get_tools_from_client_session", new_callable=AsyncMock)
-@patch("src.server.mcp_utils.StdioServerParameters")
-@patch("src.server.mcp_utils.stdio_client")
+@patch("deerflowx.server.mcp_utils._get_tools_from_client_session", new_callable=AsyncMock)
+@patch("deerflowx.server.mcp_utils.StdioServerParameters")
+@patch("deerflowx.server.mcp_utils.stdio_client")
 async def test_load_mcp_tools_stdio_success(mock_stdio_client, mock_StdioServerParameters, mock_get_tools):
     mock_get_tools.return_value = ["toolA"]
     params = MagicMock()
@@ -66,8 +66,8 @@ async def test_load_mcp_tools_stdio_missing_command():
 
 
 @pytest.mark.asyncio
-@patch("src.server.mcp_utils._get_tools_from_client_session", new_callable=AsyncMock)
-@patch("src.server.mcp_utils.sse_client")
+@patch("deerflowx.server.mcp_utils._get_tools_from_client_session", new_callable=AsyncMock)
+@patch("deerflowx.server.mcp_utils.sse_client")
 async def test_load_mcp_tools_sse_success(mock_sse_client, mock_get_tools):
     mock_get_tools.return_value = ["toolB"]
     mock_client = MagicMock()
@@ -100,9 +100,9 @@ async def test_load_mcp_tools_unsupported_type():
 
 
 @pytest.mark.asyncio
-@patch("src.server.mcp_utils._get_tools_from_client_session", new_callable=AsyncMock)
-@patch("src.server.mcp_utils.StdioServerParameters")
-@patch("src.server.mcp_utils.stdio_client")
+@patch("deerflowx.server.mcp_utils._get_tools_from_client_session", new_callable=AsyncMock)
+@patch("deerflowx.server.mcp_utils.StdioServerParameters")
+@patch("deerflowx.server.mcp_utils.stdio_client")
 async def test_load_mcp_tools_exception_handling(mock_stdio_client, mock_StdioServerParameters, mock_get_tools):
     mock_get_tools.side_effect = Exception("unexpected error")
     mock_StdioServerParameters.return_value = MagicMock()

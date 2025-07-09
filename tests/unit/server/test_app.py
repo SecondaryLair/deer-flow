@@ -9,8 +9,8 @@ from fastapi.testclient import TestClient
 from langchain_core.messages import AIMessageChunk, ToolMessage
 from langgraph.types import Command
 
-from src.config.report_style import ReportStyle
-from src.server.app import _astream_workflow_generator, _make_event, app
+from deerflowx.config.report_style import ReportStyle
+from deerflowx.server.app import _astream_workflow_generator, _make_event, app
 
 
 @pytest.fixture
@@ -42,7 +42,7 @@ class TestMakeEvent:
 
 
 class TestEnhancePromptEndpoint:
-    @patch("src.server.app.build_prompt_enhancer_graph")
+    @patch("deerflowx.server.app.build_prompt_enhancer_graph")
     def test_enhance_prompt_success(self, mock_build_graph, client):
         mock_workflow = MagicMock()
         mock_build_graph.return_value = mock_workflow
@@ -59,7 +59,7 @@ class TestEnhancePromptEndpoint:
         assert response.status_code == 200
         assert response.json()["result"] == "Enhanced prompt"
 
-    @patch("src.server.app.build_prompt_enhancer_graph")
+    @patch("deerflowx.server.app.build_prompt_enhancer_graph")
     def test_enhance_prompt_with_different_styles(self, mock_build_graph, client):
         mock_workflow = MagicMock()
         mock_build_graph.return_value = mock_workflow
@@ -79,7 +79,7 @@ class TestEnhancePromptEndpoint:
             response = client.post("/api/prompt/enhance", json=request_data)
             assert response.status_code == 200
 
-    @patch("src.server.app.build_prompt_enhancer_graph")
+    @patch("deerflowx.server.app.build_prompt_enhancer_graph")
     def test_enhance_prompt_error(self, mock_build_graph, client):
         mock_build_graph.side_effect = Exception("Enhancement failed")
 
@@ -92,7 +92,7 @@ class TestEnhancePromptEndpoint:
 
 
 class TestMCPEndpoint:
-    @patch("src.server.app.load_mcp_tools")
+    @patch("deerflowx.server.app.load_mcp_tools")
     def test_mcp_server_metadata_success(self, mock_load_tools, client):
         mock_load_tools.return_value = [{"name": "test_tool", "description": "Test tool"}]
 
@@ -111,7 +111,7 @@ class TestMCPEndpoint:
         assert response_data["command"] == "test_command"
         assert len(response_data["tools"]) == 1
 
-    @patch("src.server.app.load_mcp_tools")
+    @patch("deerflowx.server.app.load_mcp_tools")
     def test_mcp_server_metadata_with_custom_timeout(self, mock_load_tools, client):
         mock_load_tools.return_value = []
 
@@ -126,7 +126,7 @@ class TestMCPEndpoint:
         assert response.status_code == 200
         mock_load_tools.assert_called_once()
 
-    @patch("src.server.app.load_mcp_tools")
+    @patch("deerflowx.server.app.load_mcp_tools")
     def test_mcp_server_metadata_with_exception(self, mock_load_tools, client):
         mock_load_tools.side_effect = HTTPException(status_code=400, detail="MCP Server Error")
 
@@ -144,14 +144,14 @@ class TestMCPEndpoint:
 
 
 class TestRAGEndpoints:
-    @patch("src.server.app.SELECTED_RAG_PROVIDER", "test_provider")
+    @patch("deerflowx.server.app.SELECTED_RAG_PROVIDER", "test_provider")
     def test_rag_config(self, client):
         response = client.get("/api/rag/config")
 
         assert response.status_code == 200
         assert response.json()["provider"] == "test_provider"
 
-    @patch("src.server.app.build_retriever")
+    @patch("deerflowx.server.app.build_retriever")
     def test_rag_resources_with_retriever(self, mock_build_retriever, client):
         mock_retriever = MagicMock()
         mock_retriever.list_resources.return_value = [
@@ -168,7 +168,7 @@ class TestRAGEndpoints:
         assert response.status_code == 200
         assert len(response.json()["resources"]) == 1
 
-    @patch("src.server.app.build_retriever")
+    @patch("deerflowx.server.app.build_retriever")
     def test_rag_resources_without_retriever(self, mock_build_retriever, client):
         mock_build_retriever.return_value = None
 
@@ -179,7 +179,7 @@ class TestRAGEndpoints:
 
 
 class TestChatStreamEndpoint:
-    @patch("src.server.app.graph")
+    @patch("deerflowx.server.app.graph")
     def test_chat_stream_with_default_thread_id(self, mock_graph, client):
         # Mock the async stream
         async def mock_astream(*args, **kwargs):
@@ -209,7 +209,7 @@ class TestChatStreamEndpoint:
 
 class TestAstreamWorkflowGenerator:
     @pytest.mark.asyncio
-    @patch("src.server.app.graph")
+    @patch("deerflowx.server.app.graph")
     async def test_astream_workflow_generator_basic_flow(self, mock_graph):
         # Mock AI message chunk
         mock_message = AIMessageChunk(content="Hello world")
@@ -255,7 +255,7 @@ class TestAstreamWorkflowGenerator:
         assert '"agent": "a"' in events[0]
 
     @pytest.mark.asyncio
-    @patch("src.server.app.graph")
+    @patch("deerflowx.server.app.graph")
     async def test_astream_workflow_generator_with_interrupt_feedback(self, mock_graph):
         # Mock the async stream
         async def mock_astream(*args, **kwargs):
@@ -288,7 +288,7 @@ class TestAstreamWorkflowGenerator:
             events.append(event)
 
     @pytest.mark.asyncio
-    @patch("src.server.app.graph")
+    @patch("deerflowx.server.app.graph")
     async def test_astream_workflow_generator_interrupt_event(self, mock_graph):
         # Mock interrupt data
         mock_interrupt = MagicMock()
@@ -327,7 +327,7 @@ class TestAstreamWorkflowGenerator:
         assert "interrupt_id" in events[0]
 
     @pytest.mark.asyncio
-    @patch("src.server.app.graph")
+    @patch("deerflowx.server.app.graph")
     async def test_astream_workflow_generator_tool_message(self, mock_graph):
         # Mock tool message
         mock_tool_message = ToolMessage(content="Tool result", tool_call_id="tool_123")
@@ -363,7 +363,7 @@ class TestAstreamWorkflowGenerator:
         assert "tool_123" in events[0]
 
     @pytest.mark.asyncio
-    @patch("src.server.app.graph")
+    @patch("deerflowx.server.app.graph")
     async def test_astream_workflow_generator_ai_message_with_tool_calls(self, mock_graph):
         # Mock AI message with tool calls
         mock_ai_message = AIMessageChunk(content="Making tool call")
@@ -402,7 +402,7 @@ class TestAstreamWorkflowGenerator:
         assert "tool_calls" in events[0]
 
     @pytest.mark.asyncio
-    @patch("src.server.app.graph")
+    @patch("deerflowx.server.app.graph")
     async def test_astream_workflow_generator_ai_message_with_tool_call_chunks(self, mock_graph):
         # Mock AI message with only tool call chunks
         mock_ai_message = AIMessageChunk(content="Streaming tool call")
@@ -440,7 +440,7 @@ class TestAstreamWorkflowGenerator:
         assert "Streaming tool call" in events[0]
 
     @pytest.mark.asyncio
-    @patch("src.server.app.graph")
+    @patch("deerflowx.server.app.graph")
     async def test_astream_workflow_generator_with_finish_reason(self, mock_graph):
         # Mock AI message with finish reason
         mock_ai_message = AIMessageChunk(content="Complete response")
@@ -479,7 +479,7 @@ class TestAstreamWorkflowGenerator:
         assert "stop" in events[0]
 
     @pytest.mark.asyncio
-    @patch("src.server.app.graph")
+    @patch("deerflowx.server.app.graph")
     async def test_astream_workflow_generator_config_passed_correctly(self, mock_graph):
         mock_ai_message = AIMessageChunk(content="Test")
         mock_ai_message.id = "test_id"
@@ -498,7 +498,7 @@ class TestAstreamWorkflowGenerator:
 
 
 class TestGenerateProseEndpoint:
-    @patch("src.server.app.build_prose_graph")
+    @patch("deerflowx.server.app.build_prose_graph")
     def test_generate_prose_success(self, mock_build_graph, client):
         # Mock the workflow and its astream method
         mock_workflow = MagicMock()
@@ -528,7 +528,7 @@ class TestGenerateProseEndpoint:
         content = b"".join(response.iter_bytes())
         assert b"Generated prose 1" in content or b"Generated prose 2" in content
 
-    @patch("src.server.app.build_prose_graph")
+    @patch("deerflowx.server.app.build_prose_graph")
     def test_generate_prose_error(self, mock_build_graph, client):
         mock_build_graph.side_effect = Exception("Prose generation failed")
         request_data = {

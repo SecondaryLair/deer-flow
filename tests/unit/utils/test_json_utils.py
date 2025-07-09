@@ -3,7 +3,7 @@
 
 import json
 
-from src.utils.json_utils import repair_json_output
+from deerflowx.utils.json_utils import repair_json_output
 
 
 class TestRepairJsonOutput:

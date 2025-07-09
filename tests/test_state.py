@@ -42,7 +42,7 @@ def load_state_class():
     # Create a namespace for the module
     import types
 
-    module_name = "src.graph.types_direct"
+    module_name = "deerflowx.graph.types_direct"
     spec = types.ModuleType(module_name)
 
     # Add the module to sys.modules to avoid import loops

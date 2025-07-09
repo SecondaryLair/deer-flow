@@ -3,7 +3,7 @@
 
 import pytest
 
-from src.prompts.template import apply_prompt_template, get_prompt_template
+from deerflowx.prompts.template import apply_prompt_template, get_prompt_template
 
 
 def test_get_prompt_template_success():

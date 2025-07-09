@@ -7,10 +7,10 @@ import pytest
 from fastapi import HTTPException
 from pydantic import ValidationError
 
-from src.config.report_style import ReportStyle
-from src.rag.retriever import Resource
-from src.server import mcp_utils  # Assuming mcp_utils is the module to test
-from src.server.chat_request import (
+from deerflowx.config.report_style import ReportStyle
+from deerflowx.rag.retriever import Resource
+from deerflowx.server import mcp_utils  # Assuming mcp_utils is the module to test
+from deerflowx.server.chat_request import (
     ChatMessage,
     ChatRequest,
     ContentItem,
@@ -119,9 +119,9 @@ def test_chat_message_validation_error():
 
 
 @pytest.mark.asyncio
-@patch("src.server.mcp_utils._get_tools_from_client_session", new_callable=AsyncMock)
-@patch("src.server.mcp_utils.StdioServerParameters")
-@patch("src.server.mcp_utils.stdio_client")
+@patch("deerflowx.server.mcp_utils._get_tools_from_client_session", new_callable=AsyncMock)
+@patch("deerflowx.server.mcp_utils.StdioServerParameters")
+@patch("deerflowx.server.mcp_utils.stdio_client")
 async def test_load_mcp_tools_exception_handling(
     mock_stdio_client, mock_StdioServerParameters, mock_get_tools
 ):  # Changed to async def

@@ -8,8 +8,8 @@ import asyncio
 
 from InquirerPy import inquirer
 
-from src.config.questions import BUILT_IN_QUESTIONS, BUILT_IN_QUESTIONS_ZH_CN
-from src.workflow import run_agent_workflow_async
+from deerflowx.config.questions import BUILT_IN_QUESTIONS, BUILT_IN_QUESTIONS_ZH_CN
+from deerflowx.workflow import run_agent_workflow_async
 
 
 def ask(

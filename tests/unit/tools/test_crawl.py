@@ -1,10 +1,10 @@
 from unittest.mock import Mock, patch
 
-from src.tools.crawl import crawl_tool
+from deerflowx.tools.crawl import crawl_tool
 
 
 class TestCrawlTool:
-    @patch("src.tools.crawl.Crawler")
+    @patch("deerflowx.tools.crawl.Crawler")
     def test_crawl_tool_success(self, mock_crawler_class):
         # Arrange
         mock_crawler = Mock()
@@ -27,7 +27,7 @@ class TestCrawlTool:
         mock_crawler.crawl.assert_called_once_with(url)
         mock_article.to_markdown.assert_called_once()
 
-    @patch("src.tools.crawl.Crawler")
+    @patch("deerflowx.tools.crawl.Crawler")
     def test_crawl_tool_short_content(self, mock_crawler_class):
         # Arrange
         mock_crawler = Mock()
@@ -45,8 +45,8 @@ class TestCrawlTool:
         # Assert
         assert result["crawled_content"] == short_content
 
-    @patch("src.tools.crawl.Crawler")
-    @patch("src.tools.crawl.logger")
+    @patch("deerflowx.tools.crawl.Crawler")
+    @patch("deerflowx.tools.crawl.logger")
     def test_crawl_tool_crawler_exception(self, mock_logger, mock_crawler_class):
         # Arrange
         mock_crawler = Mock()
@@ -64,8 +64,8 @@ class TestCrawlTool:
         assert "Network error" in result
         mock_logger.error.assert_called_once()
 
-    @patch("src.tools.crawl.Crawler")
-    @patch("src.tools.crawl.logger")
+    @patch("deerflowx.tools.crawl.Crawler")
+    @patch("deerflowx.tools.crawl.logger")
     def test_crawl_tool_crawler_instantiation_exception(self, mock_logger, mock_crawler_class):
         # Arrange
         mock_crawler_class.side_effect = Exception("Crawler init error")
@@ -81,8 +81,8 @@ class TestCrawlTool:
         assert "Crawler init error" in result
         mock_logger.error.assert_called_once()
 
-    @patch("src.tools.crawl.Crawler")
-    @patch("src.tools.crawl.logger")
+    @patch("deerflowx.tools.crawl.Crawler")
+    @patch("deerflowx.tools.crawl.logger")
     def test_crawl_tool_markdown_conversion_exception(self, mock_logger, mock_crawler_class):
         # Arrange
         mock_crawler = Mock()
