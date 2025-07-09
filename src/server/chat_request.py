@@ -69,10 +69,6 @@ class ChatRequest(BaseModel):
     )
 
 
-class GeneratePPTRequest(BaseModel):
-    content: str = Field(..., description="The content of the ppt")
-
-
 class GenerateProseRequest(BaseModel):
     prompt: str = Field(..., description="The content of the prose")
     option: str = Field(..., description="The option of the prose writer")

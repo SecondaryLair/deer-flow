@@ -46,15 +46,11 @@
             }
         },
         {
-            "name": "Python: graph.py",
+            "name": "Python Debugger: prose test",
             "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder}/src/ppt/graph/builder.py",
-            "console": "integratedTerminal",
-            "justMyCode": false,
-            "env": {
-                "PYTHONPATH": "${workspaceFolder}"
-            }
-        },
+            "program": "${workspaceFolder}/src/prose/graph/builder.py",
+            "console": "integratedTerminal"
+        }
     ]
 }

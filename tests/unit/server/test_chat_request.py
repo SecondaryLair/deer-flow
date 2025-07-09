@@ -13,7 +13,6 @@ from src.server.chat_request import (
     ContentItem,
     ChatMessage,
     ChatRequest,
-    GeneratePPTRequest,
     GenerateProseRequest,
     EnhancePromptRequest,
 )
@@ -94,11 +93,6 @@ def test_chat_request_with_values():
     assert req.report_style == ReportStyle.ACADEMIC
 
 
-def test_generate_ppt_request():
-    req = GeneratePPTRequest(content="PPT content")
-    assert req.content == "PPT content"
-
-
 def test_generate_prose_request():
     req = GenerateProseRequest(prompt="Write a poem", option="poet", command="rhyme")
     assert req.prompt == "Write a poem"
@@ -141,8 +135,3 @@ async def test_load_mcp_tools_exception_handling(
         await mcp_utils.load_mcp_tools(server_type="stdio", command="foo")  # Use await
     assert exc.value.status_code == 500
     assert "unexpected error" in exc.value.detail
-
-
-class TestGeneratePPTRequest:
-    def test_valid_request(self):
-        pass
