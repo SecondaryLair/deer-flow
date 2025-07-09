@@ -1,6 +1,6 @@
 # Copyright (c) 2025 Bytedance Ltd. and/or its affiliates
 # SPDX-License-Identifier: MIT
-
+"""Chat request models and data structures."""
 
 from pydantic import BaseModel, Field
 
@@ -26,9 +26,12 @@ DEFAULT_CHAT_REQUEST_THREAD_ID_VALUE = "__default__"
 
 
 class ChatRequest(BaseModel):
-    messages: list[ChatMessage] | None = Field([], description="History of messages between the user and the assistant")
-    resources: list[Resource] = Field([], description="Resources to be used for the research")
-    debug: bool | None = Field(False, description="Whether to enable debug logging")
+    messages: list[ChatMessage] | None = Field(
+        default_factory=list,
+        description="History of messages between the user and the assistant",
+    )
+    resources: list[Resource] = Field(default_factory=list, description="Resources to be used for the research")
+    debug: bool | None = Field(default=False, description="Whether to enable debug logging")
     thread_id: str = Field(
         DEFAULT_CHAT_REQUEST_THREAD_ID_VALUE,
         description="A specific conversation identifier",
@@ -36,14 +39,15 @@ class ChatRequest(BaseModel):
     max_plan_iterations: int = Field(1, description="The maximum number of plan iterations")
     max_step_num: int = Field(3, description="The maximum number of steps in a plan")
     max_search_results: int = Field(3, description="The maximum number of search results")
-    auto_accepted_plan: bool = Field(False, description="Whether to automatically accept the plan")
+    auto_accepted_plan: bool = Field(default=False, description="Whether to automatically accept the plan")
     interrupt_feedback: str | None = Field(None, description="Interrupt feedback from the user on the plan")
     mcp_settings: dict | None = Field(None, description="MCP settings for the chat request")
     enable_background_investigation: bool = Field(
-        True, description="Whether to get background investigation before plan"
+        default=True,
+        description="Whether to get background investigation before plan",
     )
     report_style: ReportStyle = Field(ReportStyle.ACADEMIC, description="The style of the report")
-    enable_deep_thinking: bool = Field(False, description="Whether to enable deep thinking")
+    enable_deep_thinking: bool = Field(default=False, description="Whether to enable deep thinking")
 
 
 class GenerateProseRequest(BaseModel):

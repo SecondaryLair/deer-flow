@@ -13,12 +13,12 @@ from src.workflow import run_agent_workflow_async
 
 
 def ask(
-    question,
-    debug=False,
-    max_plan_iterations=1,
-    max_step_num=3,
-    enable_background_investigation=True,
-):
+    question: str,
+    debug: bool = False,
+    max_plan_iterations: int = 1,
+    max_step_num: int = 3,
+    enable_background_investigation: bool = True,
+) -> None:
     """Run the agent workflow with the given question.
 
     Args:
@@ -41,11 +41,11 @@ def ask(
 
 
 def main(
-    debug=False,
-    max_plan_iterations=1,
-    max_step_num=3,
-    enable_background_investigation=True,
-):
+    debug: bool = False,  # noqa: FBT001, FBT002
+    max_plan_iterations: int = 1,
+    max_step_num: int = 3,
+    enable_background_investigation: bool = True,  # noqa: FBT001, FBT002
+) -> None:
     """Interactive mode with built-in questions.
 
     Args:
@@ -68,7 +68,7 @@ def main(
     # Select a question
     initial_question = inquirer.select(
         message=("What do you want to know?" if language == "English" else "您想了解什么?"),
-        choices=[ask_own_option] + questions,
+        choices=[ask_own_option, *questions],
     ).execute()
 
     if initial_question == ask_own_option:
@@ -127,10 +127,7 @@ if __name__ == "__main__":
         )
     else:
         # Parse user input from command line arguments or user input
-        if args.query:
-            user_query = " ".join(args.query)
-        else:
-            user_query = input("Enter your query: ")
+        user_query = " ".join(args.query) if args.query else input("Enter your query: ")
 
         # Run the agent workflow with the provided parameters
         ask(

@@ -10,7 +10,7 @@ class Chunk:
     content: str
     similarity: float
 
-    def __init__(self, content: str, similarity: float):
+    def __init__(self, content: str, similarity: float) -> None:
         self.content = content
         self.similarity = similarity
 
@@ -21,16 +21,18 @@ class Document:
     id: str
     url: str | None = None
     title: str | None = None
-    chunks: list[Chunk] = []
+    chunks: list[Chunk] | None = None
 
     def __init__(
         self,
-        id: str,
+        doc_id: str,
         url: str | None = None,
         title: str | None = None,
-        chunks: list[Chunk] = [],
-    ):
-        self.id = id
+        chunks: list[Chunk] | None = None,
+    ) -> None:
+        if chunks is None:
+            chunks = []
+        self.id = doc_id
         self.url = url
         self.title = title
         self.chunks = chunks
@@ -63,5 +65,5 @@ class Retriever(abc.ABC):
         """List resources from the rag provider."""
 
     @abc.abstractmethod
-    def query_relevant_documents(self, query: str, resources: list[Resource] = []) -> list[Document]:
+    def query_relevant_documents(self, query: str, resources: list[Resource] | None = None) -> list[Document]:
         """Query relevant documents from the resources."""

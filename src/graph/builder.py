@@ -1,8 +1,10 @@
 # Copyright (c) 2025 Bytedance Ltd. and/or its affiliates
 # SPDX-License-Identifier: MIT
 
+
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, START, StateGraph
+from langgraph.graph.state import CompiledStateGraph
 
 from src.prompts.planner_model import StepType
 
@@ -19,7 +21,7 @@ from .nodes import (
 from .types import State
 
 
-def continue_to_running_research_team(state: State):
+def continue_to_running_research_team(state: State) -> str:
     current_plan = state.get("current_plan")
     if not current_plan or not current_plan.steps:
         return "planner"
@@ -35,7 +37,7 @@ def continue_to_running_research_team(state: State):
     return "planner"
 
 
-def _build_base_graph():
+def _build_base_graph() -> StateGraph:
     """Build and return the base state graph with all nodes and edges."""
     builder = StateGraph(State)
     builder.add_edge(START, "coordinator")
@@ -57,10 +59,10 @@ def _build_base_graph():
     return builder
 
 
-def build_graph_with_memory():
+def build_graph_with_memory() -> CompiledStateGraph:
     """Build and return the agent workflow graph with memory."""
     # use persistent memory to save conversation history
-    # TODO: be compatible with SQLite / PostgreSQL
+    # NOTE: Future enhancement - add SQLite/PostgreSQL compatibility
     memory = MemorySaver()
 
     # build state graph
@@ -68,7 +70,7 @@ def build_graph_with_memory():
     return builder.compile(checkpointer=memory)
 
 
-def build_graph():
+def build_graph() -> CompiledStateGraph:
     """Build and return the agent workflow graph without memory."""
     # build state graph
     builder = _build_base_graph()

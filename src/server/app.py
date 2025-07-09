@@ -1,8 +1,10 @@
 # Copyright (c) 2025 Bytedance Ltd. and/or its affiliates
 # SPDX-License-Identifier: MIT
+"""FastAPI server application for deer-flow research assistant."""
 
 import json
 import logging
+from collections.abc import AsyncGenerator
 from typing import Annotated, Any, cast
 from uuid import uuid4
 
@@ -28,7 +30,7 @@ from src.server.chat_request import (
 )
 from src.server.config_request import ConfigResponse
 from src.server.mcp_request import MCPServerMetadataRequest, MCPServerMetadataResponse
-from src.server.mcp_utils import load_mcp_tools
+from src.server.mcp_utils import MCPServerConfig, load_mcp_tools
 from src.server.rag_request import (
     RAGConfigResponse,
     RAGResourceRequest,
@@ -58,7 +60,7 @@ graph = build_graph_with_memory()
 
 
 @app.post("/api/chat/stream")
-async def chat_stream(request: ChatRequest):
+async def chat_stream(request: ChatRequest) -> StreamingResponse:
     thread_id = request.thread_id
     if thread_id == DEFAULT_CHAT_REQUEST_THREAD_ID_VALUE:
         thread_id = str(uuid4())
@@ -81,7 +83,7 @@ async def chat_stream(request: ChatRequest):
     )
 
 
-async def _astream_workflow_generator(
+async def _astream_workflow_generator(  # noqa: PLR0913
     messages: list[dict],
     thread_id: str,
     resources: list[Resource],
@@ -94,7 +96,7 @@ async def _astream_workflow_generator(
     enable_background_investigation: bool,
     report_style: ReportStyle,
     enable_deep_thinking: bool,
-):
+) -> AsyncGenerator[str, None]:
     input_ = {
         "messages": messages,
         "plan_iterations": 0,
@@ -176,14 +178,14 @@ async def _astream_workflow_generator(
                 yield _make_event("message_chunk", event_stream_message)
 
 
-def _make_event(event_type: str, data: dict[str, Any]):
+def _make_event(event_type: str, data: dict[str, Any]) -> str:
     if data.get("content") == "":
         data.pop("content")
     return f"event: {event_type}\ndata: {json.dumps(data, ensure_ascii=False)}\n\n"
 
 
 @app.post("/api/prose/generate")
-async def generate_prose(request: GenerateProseRequest):
+async def generate_prose(request: GenerateProseRequest) -> StreamingResponse:
     try:
         sanitized_prompt = request.prompt.replace("\r\n", "").replace("\n", "")
         logger.info(f"Generating prose for prompt: {sanitized_prompt}")
@@ -201,13 +203,13 @@ async def generate_prose(request: GenerateProseRequest):
             (f"data: {event[0].content}\n\n" async for _, event in events),
             media_type="text/event-stream",
         )
-    except Exception as e:
-        logger.exception(f"Error occurred during prose generation: {e!s}")
-        raise HTTPException(status_code=500, detail=INTERNAL_SERVER_ERROR_DETAIL)
+    except (ValueError, TypeError, RuntimeError) as e:
+        logger.exception("Error occurred during prose generation")
+        raise HTTPException(status_code=500, detail=INTERNAL_SERVER_ERROR_DETAIL) from e
 
 
 @app.post("/api/prompt/enhance")
-async def enhance_prompt(request: EnhancePromptRequest):
+async def enhance_prompt(request: EnhancePromptRequest) -> dict[str, str]:
     try:
         sanitized_prompt = request.prompt.replace("\r\n", "").replace("\n", "")
         logger.info(f"Enhancing prompt: {sanitized_prompt}")
@@ -224,7 +226,7 @@ async def enhance_prompt(request: EnhancePromptRequest):
                     "SOCIAL_MEDIA": ReportStyle.SOCIAL_MEDIA,
                 }
                 report_style = style_mapping.get(request.report_style.upper(), ReportStyle.ACADEMIC)
-            except Exception:
+            except (AttributeError, KeyError):
                 # If invalid style, default to ACADEMIC
                 report_style = ReportStyle.ACADEMIC
         else:
@@ -236,16 +238,16 @@ async def enhance_prompt(request: EnhancePromptRequest):
                 "prompt": request.prompt,
                 "context": request.context,
                 "report_style": report_style,
-            }
+            },
         )
         return {"result": final_state["output"]}
-    except Exception as e:
-        logger.exception(f"Error occurred during prompt enhancement: {e!s}")
-        raise HTTPException(status_code=500, detail=INTERNAL_SERVER_ERROR_DETAIL)
+    except (ValueError, TypeError, RuntimeError) as e:
+        logger.exception("Error occurred during prompt enhancement")
+        raise HTTPException(status_code=500, detail=INTERNAL_SERVER_ERROR_DETAIL) from e
 
 
-@app.post("/api/mcp/server/metadata", response_model=MCPServerMetadataResponse)
-async def mcp_server_metadata(request: MCPServerMetadataRequest):
+@app.post("/api/mcp/server/metadata")
+async def mcp_server_metadata(request: MCPServerMetadataRequest) -> MCPServerMetadataResponse:
     """Get information about an MCP server."""
     try:
         # Set default timeout with a longer value for this endpoint
@@ -256,7 +258,7 @@ async def mcp_server_metadata(request: MCPServerMetadataRequest):
             timeout = request.timeout_seconds
 
         # Load tools from the MCP server using the utility function
-        tools = await load_mcp_tools(
+        config = MCPServerConfig(
             server_type=request.transport,
             command=request.command,
             args=request.args,
@@ -264,9 +266,10 @@ async def mcp_server_metadata(request: MCPServerMetadataRequest):
             env=request.env,
             timeout_seconds=timeout,
         )
+        tools = await load_mcp_tools(config)
 
         # Create the response with tools
-        response = MCPServerMetadataResponse(
+        return MCPServerMetadataResponse(
             transport=request.transport,
             command=request.command,
             args=request.args,
@@ -275,20 +278,19 @@ async def mcp_server_metadata(request: MCPServerMetadataRequest):
             tools=tools,
         )
 
-        return response
-    except Exception as e:
-        logger.exception(f"Error in MCP server metadata endpoint: {e!s}")
-        raise HTTPException(status_code=500, detail=INTERNAL_SERVER_ERROR_DETAIL)
+    except (ValueError, TypeError, RuntimeError, ConnectionError) as e:
+        logger.exception("Error in MCP server metadata endpoint")
+        raise HTTPException(status_code=500, detail=INTERNAL_SERVER_ERROR_DETAIL) from e
 
 
-@app.get("/api/rag/config", response_model=RAGConfigResponse)
-async def rag_config():
+@app.get("/api/rag/config")
+async def rag_config() -> RAGConfigResponse:
     """Get the config of the RAG."""
     return RAGConfigResponse(provider=SELECTED_RAG_PROVIDER)
 
 
-@app.get("/api/rag/resources", response_model=RAGResourcesResponse)
-async def rag_resources(request: Annotated[RAGResourceRequest, Query()]):
+@app.get("/api/rag/resources")
+async def rag_resources(request: Annotated[RAGResourceRequest, Query()]) -> RAGResourcesResponse:
     """Get the resources of the RAG."""
     retriever = build_retriever()
     if retriever:
@@ -296,8 +298,8 @@ async def rag_resources(request: Annotated[RAGResourceRequest, Query()]):
     return RAGResourcesResponse(resources=[])
 
 
-@app.get("/api/config", response_model=ConfigResponse)
-async def config():
+@app.get("/api/config")
+async def config() -> ConfigResponse:
     """Get the config of the server."""
     return ConfigResponse(
         rag=RAGConfigResponse(provider=SELECTED_RAG_PROVIDER),

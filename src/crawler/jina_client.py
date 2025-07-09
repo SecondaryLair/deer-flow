@@ -19,8 +19,9 @@ class JinaClient:
             headers["Authorization"] = f"Bearer {os.getenv('JINA_API_KEY')}"
         else:
             logger.warning(
-                "Jina API key is not set. Provide your own key to access a higher rate limit. See https://jina.ai/reader for more information."
+                "Jina API key is not set. Provide your own key to access a higher rate limit. "
+                "See https://jina.ai/reader for more information.",
             )
         data = {"url": url}
-        response = requests.post("https://r.jina.ai/", headers=headers, json=data)
+        response = requests.post("https://r.jina.ai/", headers=headers, json=data, timeout=30)
         return response.text

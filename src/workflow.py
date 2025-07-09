@@ -1,5 +1,8 @@
 # Copyright (c) 2025 Bytedance Ltd. and/or its affiliates
 # SPDX-License-Identifier: MIT
+"""Workflow module for running agent workflows asynchronously."""
+
+from __future__ import annotations
 
 import logging
 
@@ -14,7 +17,7 @@ logging.basicConfig(
 )
 
 
-def enable_debug_logging():
+def enable_debug_logging() -> None:
     """Enable debug level logging for more detailed execution information."""
     logging.getLogger("src").setLevel(logging.DEBUG)
 
@@ -27,11 +30,12 @@ graph = build_graph()
 
 async def run_agent_workflow_async(
     user_input: str,
+    *,
     debug: bool = False,
     max_plan_iterations: int = 1,
     max_step_num: int = 3,
     enable_background_investigation: bool = True,
-):
+) -> None:
     """Run the agent workflow asynchronously with the given user input.
 
     Args:
@@ -72,8 +76,8 @@ async def run_agent_workflow_async(
                         "args": ["mcp-github-trending"],
                         "enabled_tools": ["get_github_trending_repositories"],
                         "add_to_agents": ["researcher"],
-                    }
-                }
+                    },
+                },
             },
         },
         "recursion_limit": 100,
@@ -93,11 +97,11 @@ async def run_agent_workflow_async(
             else:
                 # For any other output format
                 logger.info(f"Output: {s}")
-        except Exception:
+        except (AttributeError, TypeError, ValueError):
             logger.exception("Error processing stream output")
 
     logger.info("Async workflow completed successfully")
 
 
 if __name__ == "__main__":
-    print(graph.get_graph(xray=True).draw_mermaid())  # noqa: T201
+    pass

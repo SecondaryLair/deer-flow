@@ -1,5 +1,6 @@
 # Copyright (c) 2025 Bytedance Ltd. and/or its affiliates
 # SPDX-License-Identifier: MIT
+"""Configuration request models and responses."""
 
 from pydantic import BaseModel, Field
 

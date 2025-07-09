@@ -1,5 +1,8 @@
 # Copyright (c) 2025 Bytedance Ltd. and/or its affiliates
 # SPDX-License-Identifier: MIT
+"""LLM management and configuration utilities."""
+
+from __future__ import annotations
 
 import os
 from pathlib import Path
@@ -33,7 +36,7 @@ def _get_llm_type_config_keys() -> dict[str, str]:
 def _get_env_llm_conf(llm_type: str) -> dict[str, Any]:
     """Get LLM configuration from environment variables.
     Environment variables should follow the format: {LLM_TYPE}__{KEY}
-    e.g., BASIC_MODEL__api_key, BASIC_MODEL__base_url
+    e.g., BASIC_MODEL__api_key, BASIC_MODEL__base_url.
     """
     prefix = f"{llm_type.upper()}_MODEL__"
     conf = {}
@@ -50,11 +53,13 @@ def _create_llm_use_conf(llm_type: LLMType, conf: dict[str, Any]) -> ChatOpenAI 
     config_key = llm_type_config_keys.get(llm_type)
 
     if not config_key:
-        raise ValueError(f"Unknown LLM type: {llm_type}")
+        msg = f"Unknown LLM type: {llm_type}"
+        raise ValueError(msg)
 
     llm_conf = conf.get(config_key, {})
     if not isinstance(llm_conf, dict):
-        raise ValueError(f"Invalid LLM configuration for {llm_type}: {llm_conf}")
+        msg = f"Invalid LLM configuration for {llm_type}: {llm_conf}"
+        raise TypeError(msg)
 
     # Get configuration from environment variables
     env_conf = _get_env_llm_conf(llm_type)
@@ -63,7 +68,8 @@ def _create_llm_use_conf(llm_type: LLMType, conf: dict[str, Any]) -> ChatOpenAI 
     merged_conf = {**llm_conf, **env_conf}
 
     if not merged_conf:
-        raise ValueError(f"No configuration found for LLM type: {llm_type}")
+        msg = f"No configuration found for LLM type: {llm_type}"
+        raise ValueError(msg)
 
     if llm_type == "reasoning":
         merged_conf["api_base"] = merged_conf.pop("base_url", None)
@@ -73,8 +79,8 @@ def _create_llm_use_conf(llm_type: LLMType, conf: dict[str, Any]) -> ChatOpenAI 
 
     # Create custom HTTP client if SSL verification is disabled
     if not verify_ssl:
-        http_client = httpx.Client(verify=False)
-        http_async_client = httpx.AsyncClient(verify=False)
+        http_client = httpx.Client(verify=False)  # noqa: S501
+        http_async_client = httpx.AsyncClient(verify=False)  # noqa: S501
         merged_conf["http_client"] = http_client
         merged_conf["http_async_client"] = http_async_client
 
@@ -83,7 +89,7 @@ def _create_llm_use_conf(llm_type: LLMType, conf: dict[str, Any]) -> ChatOpenAI 
 
 def get_llm_by_type(
     llm_type: LLMType,
-) -> ChatOpenAI:
+) -> ChatOpenAI | ChatDeepSeek:
     """Get LLM instance by type. Returns cached instance if available."""
     if llm_type in _llm_cache:
         return _llm_cache[llm_type]
@@ -123,14 +129,8 @@ def get_configured_llm_models() -> dict[str, list[str]]:
             if model_name:
                 configured_models.setdefault(llm_type, []).append(model_name)
 
-        return configured_models
-
-    except Exception as e:
+    except (FileNotFoundError, KeyError, ValueError):
         # Log error and return empty dict to avoid breaking the application
-        print(f"Warning: Failed to load LLM configuration: {e}")
         return {}
-
-
-# In the future, we will use reasoning_llm and vl_llm for different purposes
-# reasoning_llm = get_llm_by_type("reasoning")
-# vl_llm = get_llm_by_type("vision")
+    else:
+        return configured_models

@@ -21,35 +21,44 @@ class VikingDBKnowledgeBaseProvider(Retriever):
     api_sk: str
     retrieval_size: int = 10
 
-    def __init__(self):
+    def __init__(self) -> None:
         api_url = os.getenv("VIKINGDB_KNOWLEDGE_BASE_API_URL")
         if not api_url:
-            raise ValueError("VIKINGDB_KNOWLEDGE_BASE_API_URL is not set")
+            msg = "VIKINGDB_KNOWLEDGE_BASE_API_URL is not set"
+            raise ValueError(msg)
         self.api_url = api_url
 
         api_ak = os.getenv("VIKINGDB_KNOWLEDGE_BASE_API_AK")
         if not api_ak:
-            raise ValueError("VIKINGDB_KNOWLEDGE_BASE_API_AK is not set")
+            msg = "VIKINGDB_KNOWLEDGE_BASE_API_AK is not set"
+            raise ValueError(msg)
         self.api_ak = api_ak
 
         api_sk = os.getenv("VIKINGDB_KNOWLEDGE_BASE_API_SK")
         if not api_sk:
-            raise ValueError("VIKINGDB_KNOWLEDGE_BASE_API_SK is not set")
+            msg = "VIKINGDB_KNOWLEDGE_BASE_API_SK is not set"
+            raise ValueError(msg)
         self.api_sk = api_sk
 
         retrieval_size = os.getenv("VIKINGDB_KNOWLEDGE_BASE_RETRIEVAL_SIZE")
         if retrieval_size:
             self.retrieval_size = int(retrieval_size)
 
-    def prepare_request(self, method, path, params=None, data=None, doseq=0):
-        """Prepare signed request using volcengine auth"""
+    def prepare_request(
+        self,
+        method: str,
+        path: str,
+        params: dict | None = None,
+        data: dict | None = None,
+        doseq: int = 0,
+    ) -> Request:
+        """Prepare signed request using volcengine auth."""
         if params:
             for key in params:
-                if type(params[key]) == int or type(params[key]) == float or type(params[key]) == bool:
+                if isinstance(params[key], (int, float, bool)):
                     params[key] = str(params[key])
-                elif type(params[key]) == list:
-                    if not doseq:
-                        params[key] = ",".join(params[key])
+                elif isinstance(params[key], list) and not doseq:
+                    params[key] = ",".join(params[key])
 
         r = Request()
         r.set_shema("https")
@@ -71,8 +80,10 @@ class VikingDBKnowledgeBaseProvider(Retriever):
         SignerV4.sign(r, credentials)
         return r
 
-    def query_relevant_documents(self, query: str, resources: list[Resource] = []) -> list[Document]:
-        """Query relevant documents from the knowledge base"""
+    def query_relevant_documents(self, query: str, resources: list[Resource] | None = None) -> list[Document]:
+        """Query relevant documents from the knowledge base."""
+        if resources is None:
+            resources = []
         if not resources:
             return []
 
@@ -109,15 +120,18 @@ class VikingDBKnowledgeBaseProvider(Retriever):
                 url=f"http://{self.api_url}{info_req.path}",
                 headers=info_req.headers,
                 data=info_req.body,
+                timeout=30,
             )
 
             try:
                 response = json.loads(rsp.text)
             except json.JSONDecodeError as e:
-                raise ValueError(f"Failed to parse JSON response: {e}")
+                msg = f"Failed to parse JSON response: {e}"
+                raise ValueError(msg) from e
 
             if response["code"] != 0:
-                raise ValueError(f"Failed to query documents from resource: {response['message']}")
+                msg = f"Failed to query documents from resource: {response['message']}"
+                raise ValueError(msg)
 
             rsp_data = response.get("data", {})
 
@@ -142,7 +156,7 @@ class VikingDBKnowledgeBaseProvider(Retriever):
         return list(all_documents.values())
 
     def list_resources(self, query: str | None = None) -> list[Resource]:
-        """List resources (knowledge bases) from the knowledge base service"""
+        """List resources (knowledge bases) from the knowledge base service."""
         method = "POST"
         path = "/api/knowledge/collection/list"
         info_req = self.prepare_request(method=method, path=path)
@@ -151,14 +165,17 @@ class VikingDBKnowledgeBaseProvider(Retriever):
             url=f"http://{self.api_url}{info_req.path}",
             headers=info_req.headers,
             data=info_req.body,
+            timeout=30,
         )
         try:
             response = json.loads(rsp.text)
         except json.JSONDecodeError as e:
-            raise ValueError(f"Failed to parse JSON response: {e}")
+            msg = f"Failed to parse JSON response: {e}"
+            raise ValueError(msg) from e
 
         if response["code"] != 0:
-            raise Exception(f"Failed to list resources: {response['message']}")
+            msg = f"Failed to list resources: {response['message']}"
+            raise RuntimeError(msg)
 
         resources = []
         rsp_data = response.get("data", {})
@@ -184,5 +201,6 @@ class VikingDBKnowledgeBaseProvider(Retriever):
 def parse_uri(uri: str) -> tuple[str, str]:
     parsed = urlparse(uri)
     if parsed.scheme != "rag":
-        raise ValueError(f"Invalid URI: {uri}")
+        msg = f"Invalid URI: {uri}"
+        raise ValueError(msg)
     return parsed.path.split("/")[1], parsed.fragment

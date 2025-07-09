@@ -1,7 +1,6 @@
 # Copyright (c) 2025 Bytedance Ltd. and/or its affiliates
 # SPDX-License-Identifier: MIT
-
-import json
+"""Enhanced Tavily search tool with image support."""
 
 from langchain.callbacks.manager import (
     AsyncCallbackManagerForToolRun,
@@ -16,7 +15,7 @@ from src.tools.tavily_search.tavily_search_api_wrapper import (
 
 
 class TavilySearchResultsWithImages(TavilySearchResults):  # type: ignore[override, override]
-    """Tool that queries the Tavily Search API and gets back json.
+    r"""Tool that queries the Tavily Search API and gets back json.
 
     Setup:
         Install ``langchain-openai`` and ``tavily-python``, and set environment variable ``TAVILY_API_KEY``.
@@ -91,7 +90,7 @@ class TavilySearchResultsWithImages(TavilySearchResults):  # type: ignore[overri
 
     """  # noqa: E501
 
-    include_image_descriptions: bool = False
+    include_image_descriptions: bool = Field(default=False)
     """Include a image descriptions in the response.
 
     Default is False.
@@ -102,10 +101,9 @@ class TavilySearchResultsWithImages(TavilySearchResults):  # type: ignore[overri
     def _run(
         self,
         query: str,
-        run_manager: CallbackManagerForToolRun | None = None,
+        _run_manager: CallbackManagerForToolRun | None = None,
     ) -> tuple[list[dict[str, str]] | str, dict]:
         """Use the tool."""
-        # TODO: remove try/except, should be handled by BaseTool
         try:
             raw_results = self.api_wrapper.raw_results(
                 query,
@@ -118,16 +116,15 @@ class TavilySearchResultsWithImages(TavilySearchResults):  # type: ignore[overri
                 self.include_images,
                 self.include_image_descriptions,
             )
-        except Exception as e:
+        except (ValueError, KeyError, ConnectionError, TimeoutError) as e:
             return repr(e), {}
         cleaned_results = self.api_wrapper.clean_results_with_images(raw_results)
-        print("sync", json.dumps(cleaned_results, indent=2, ensure_ascii=False))
         return cleaned_results, raw_results
 
     async def _arun(
         self,
         query: str,
-        run_manager: AsyncCallbackManagerForToolRun | None = None,
+        _run_manager: AsyncCallbackManagerForToolRun | None = None,
     ) -> tuple[list[dict[str, str]] | str, dict]:
         """Use the tool asynchronously."""
         try:
@@ -142,8 +139,7 @@ class TavilySearchResultsWithImages(TavilySearchResults):  # type: ignore[overri
                 self.include_images,
                 self.include_image_descriptions,
             )
-        except Exception as e:
+        except (ValueError, TypeError, ConnectionError, TimeoutError) as e:
             return repr(e), {}
         cleaned_results = self.api_wrapper.clean_results_with_images(raw_results)
-        print("async", json.dumps(cleaned_results, indent=2, ensure_ascii=False))
         return cleaned_results, raw_results

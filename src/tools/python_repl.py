@@ -1,5 +1,6 @@
 # Copyright (c) 2025 Bytedance Ltd. and/or its affiliates
 # SPDX-License-Identifier: MIT
+"""Python REPL tool for code execution and analysis."""
 
 import logging
 from typing import Annotated
@@ -18,7 +19,7 @@ logger = logging.getLogger(__name__)
 @log_io
 def python_repl_tool(
     code: Annotated[str, "The python code to execute to do further analysis or calculation."],
-):
+) -> str:
     """Use this to execute python code and do data analysis or calculation. If you want to see the output of a value,
     you should print it out with `print(...)`. This is visible to the user.
     """
@@ -37,8 +38,7 @@ def python_repl_tool(
         logger.info("Code execution successful")
     except BaseException as e:
         error_msg = repr(e)
-        logger.error(error_msg)
+        logger.exception(error_msg)
         return f"Error executing code:\n```python\n{code}\n```\nError: {error_msg}"
 
-    result_str = f"Successfully executed:\n```python\n{code}\n```\nStdout: {result}"
-    return result_str
+    return f"Successfully executed:\n```python\n{code}\n```\nStdout: {result}"

@@ -1,7 +1,10 @@
 # Copyright (c) 2025 Bytedance Ltd. and/or its affiliates
 # SPDX-License-Identifier: MIT
+"""MCP (Model Context Protocol) utility functions and client management."""
 
 import logging
+from collections.abc import AsyncContextManager
+from dataclasses import dataclass
 from datetime import timedelta
 from typing import Any
 
@@ -10,10 +13,26 @@ from mcp import ClientSession, StdioServerParameters
 from mcp.client.sse import sse_client
 from mcp.client.stdio import stdio_client
 
+
+@dataclass
+class MCPServerConfig:
+    """Configuration for MCP server connection."""
+
+    server_type: str
+    command: str | None = None
+    args: list[str] | None = None
+    url: str | None = None
+    env: dict[str, str] | None = None
+    timeout_seconds: int = 60
+
+
 logger = logging.getLogger(__name__)
 
 
-async def _get_tools_from_client_session(client_context_manager: Any, timeout_seconds: int = 10) -> list:
+async def _get_tools_from_client_session(
+    client_context_manager: AsyncContextManager[tuple[Any, Any]],
+    timeout_seconds: int = 10,
+) -> list:
     """Helper function to get tools from a client session.
 
     Args:
@@ -27,32 +46,24 @@ async def _get_tools_from_client_session(client_context_manager: Any, timeout_se
         Exception: If there's an error during the process
 
     """
-    async with client_context_manager as (read, write):
-        async with ClientSession(read, write, read_timeout_seconds=timedelta(seconds=timeout_seconds)) as session:
-            # Initialize the connection
-            await session.initialize()
-            # List available tools
-            listed_tools = await session.list_tools()
-            return listed_tools.tools
+    async with (
+        client_context_manager as (read, write),
+        ClientSession(read, write, read_timeout_seconds=timedelta(seconds=timeout_seconds)) as session,
+    ):
+        # Initialize the connection
+        await session.initialize()
+        # List available tools
+        listed_tools = await session.list_tools()
+        return listed_tools.tools
 
 
 async def load_mcp_tools(
-    server_type: str,
-    command: str | None = None,
-    args: list[str] | None = None,
-    url: str | None = None,
-    env: dict[str, str] | None = None,
-    timeout_seconds: int = 60,  # Longer default timeout for first-time executions
+    config: MCPServerConfig,
 ) -> list:
     """Load tools from an MCP server.
 
     Args:
-        server_type: The type of MCP server connection (stdio or sse)
-        command: The command to execute (for stdio type)
-        args: Command arguments (for stdio type)
-        url: The URL of the SSE server (for sse type)
-        env: Environment variables
-        timeout_seconds: Timeout in seconds (default: 60 for first-time executions)
+        config: MCP server configuration
 
     Returns:
         List of available tools from the MCP server
@@ -62,28 +73,28 @@ async def load_mcp_tools(
 
     """
     try:
-        if server_type == "stdio":
-            if not command:
+        if config.server_type == "stdio":
+            if not config.command:
                 raise HTTPException(status_code=400, detail="Command is required for stdio type")
 
             server_params = StdioServerParameters(
-                command=command,  # Executable
-                args=args,  # Optional command line arguments
-                env=env,  # Optional environment variables
+                command=config.command,  # Executable
+                args=config.args,  # Optional command line arguments
+                env=config.env,  # Optional environment variables
             )
 
-            return await _get_tools_from_client_session(stdio_client(server_params), timeout_seconds)
+            return await _get_tools_from_client_session(stdio_client(server_params), config.timeout_seconds)
 
-        if server_type == "sse":
-            if not url:
+        if config.server_type == "sse":
+            if not config.url:
                 raise HTTPException(status_code=400, detail="URL is required for sse type")
 
-            return await _get_tools_from_client_session(sse_client(url=url), timeout_seconds)
+            return await _get_tools_from_client_session(sse_client(url=config.url), config.timeout_seconds)
 
-        raise HTTPException(status_code=400, detail=f"Unsupported server type: {server_type}")
+        raise HTTPException(status_code=400, detail=f"Unsupported server type: {config.server_type}")
 
-    except Exception as e:
+    except (ValueError, TypeError, ConnectionError, TimeoutError, RuntimeError) as e:
         if not isinstance(e, HTTPException):
-            logger.exception(f"Error loading MCP tools: {e!s}")
-            raise HTTPException(status_code=500, detail=str(e))
+            logger.exception("Error loading MCP tools")
+            raise HTTPException(status_code=500, detail=str(e)) from e
         raise

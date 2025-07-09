@@ -1,5 +1,6 @@
 # Copyright (c) 2025 Bytedance Ltd. and/or its affiliates
 # SPDX-License-Identifier: MIT
+"""Configuration management and loading utilities."""
 
 from dotenv import load_dotenv
 
@@ -15,7 +16,8 @@ TEAM_MEMBER_CONFIGRATIONS = {
     "researcher": {
         "name": "researcher",
         "desc": (
-            "Responsible for searching and collecting relevant information, understanding user needs and conducting research analysis"
+            "Responsible for searching and collecting relevant information, "
+            "understanding user needs and conducting research analysis"
         ),
         "desc_for_llm": (
             "Uses search engines and web crawlers to gather information from the internet. "
@@ -40,10 +42,11 @@ TEAM_MEMBERS = list(TEAM_MEMBER_CONFIGRATIONS.keys())
 
 __all__ = [
     # Other configurations
-    "TEAM_MEMBERS",
-    "TEAM_MEMBER_CONFIGRATIONS",
-    "SELECTED_SEARCH_ENGINE",
-    "SearchEngine",
     "BUILT_IN_QUESTIONS",
     "BUILT_IN_QUESTIONS_ZH_CN",
+    "SELECTED_SEARCH_ENGINE",
+    "TEAM_MEMBERS",
+    "TEAM_MEMBER_CONFIGRATIONS",
+    "SearchEngine",
+    "load_yaml_config",
 ]

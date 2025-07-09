@@ -5,6 +5,7 @@ import asyncio
 import logging
 
 from langgraph.graph import END, START, StateGraph
+from langgraph.graph.state import CompiledStateGraph
 
 from src.prose.graph.prose_continue_node import prose_continue_node
 from src.prose.graph.prose_fix_node import prose_fix_node
@@ -15,11 +16,11 @@ from src.prose.graph.prose_zap_node import prose_zap_node
 from src.prose.graph.state import ProseState
 
 
-def optional_node(state: ProseState):
+def optional_node(state: ProseState) -> str:
     return state["option"]
 
 
-def build_graph():
+def build_graph() -> CompiledStateGraph:
     """Build and return the prose workflow graph."""
     # build state graph
     builder = StateGraph(ProseState)
@@ -45,7 +46,7 @@ def build_graph():
     return builder.compile()
 
 
-async def _test_workflow():
+async def _test_workflow() -> None:
     workflow = build_graph()
     events = workflow.astream(
         {
@@ -55,9 +56,8 @@ async def _test_workflow():
         stream_mode="messages",
         subgraphs=True,
     )
-    async for node, event in events:
-        e = event[0]
-        print({"id": e.id, "object": "chat.completion.chunk", "content": e.content})
+    async for _node, event in events:
+        event[0]
 
 
 if __name__ == "__main__":

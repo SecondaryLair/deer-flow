@@ -4,7 +4,7 @@
 import functools
 import logging
 from collections.abc import Callable
-from typing import Any, TypeVar
+from typing import TypeVar
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +23,7 @@ def log_io(func: Callable) -> Callable:
     """
 
     @functools.wraps(func)
-    def wrapper(*args: Any, **kwargs: Any) -> Any:
+    def wrapper(*args, **kwargs):
         # Log input parameters
         func_name = func.__name__
         params = ", ".join([*(str(arg) for arg in args), *(f"{k}={v}" for k, v in kwargs.items())])
@@ -43,13 +43,13 @@ def log_io(func: Callable) -> Callable:
 class LoggedToolMixin:
     """A mixin class that adds logging functionality to any tool."""
 
-    def _log_operation(self, method_name: str, *args: Any, **kwargs: Any) -> None:
+    def _log_operation(self, method_name: str, *args, **kwargs) -> None:
         """Helper method to log tool operations."""
         tool_name = self.__class__.__name__.replace("Logged", "")
         params = ", ".join([*(str(arg) for arg in args), *(f"{k}={v}" for k, v in kwargs.items())])
         logger.debug(f"Tool {tool_name}.{method_name} called with parameters: {params}")
 
-    def _run(self, *args: Any, **kwargs: Any) -> Any:
+    def _run(self, *args, **kwargs):
         """Override _run method to add logging."""
         self._log_operation("_run", *args, **kwargs)
         result = super()._run(*args, **kwargs)
@@ -57,7 +57,7 @@ class LoggedToolMixin:
         return result
 
 
-def create_logged_tool(base_tool_class: type[T]) -> type[T]:
+def create_logged_tool[T](base_tool_class: type[T]) -> type[T]:
     """Factory function to create a logged version of any tool class.
 
     Args:

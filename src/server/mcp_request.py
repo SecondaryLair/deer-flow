@@ -1,6 +1,6 @@
 # Copyright (c) 2025 Bytedance Ltd. and/or its affiliates
 # SPDX-License-Identifier: MIT
-
+"""MCP (Model Context Protocol) request models and utilities."""
 
 from pydantic import BaseModel, Field
 

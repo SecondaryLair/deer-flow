@@ -3,44 +3,61 @@
 # SPDX-License-Identifier: MIT
 
 import json
+from dataclasses import dataclass
 
 import aiohttp
 import requests
-from langchain_community.utilities.tavily_search import TAVILY_API_URL
 from langchain_community.utilities.tavily_search import (
     TavilySearchAPIWrapper as OriginalTavilySearchAPIWrapper,
 )
+
+TAVILY_API_URL = "https://api.tavily.com"
+HTTP_OK = 200
+
+
+@dataclass
+class SearchParams:
+    """Parameters for Tavily search."""
+
+    max_results: int | None = 5
+    search_depth: str | None = "advanced"
+    include_domains: list[str] | None = None
+    exclude_domains: list[str] | None = None
+    include_answer: bool | None = False
+    include_raw_content: bool | None = False
+    include_images: bool | None = False
+    include_image_descriptions: bool | None = False
 
 
 class EnhancedTavilySearchAPIWrapper(OriginalTavilySearchAPIWrapper):
     def raw_results(
         self,
         query: str,
-        max_results: int | None = 5,
-        search_depth: str | None = "advanced",
-        include_domains: list[str] | None = [],
-        exclude_domains: list[str] | None = [],
-        include_answer: bool | None = False,
-        include_raw_content: bool | None = False,
-        include_images: bool | None = False,
-        include_image_descriptions: bool | None = False,
+        params: SearchParams | None = None,
     ) -> dict:
-        params = {
+        if params is None:
+            params = SearchParams()
+
+        exclude_domains = params.exclude_domains or []
+        include_domains = params.include_domains or []
+
+        request_params = {
             "api_key": self.tavily_api_key.get_secret_value(),
             "query": query,
-            "max_results": max_results,
-            "search_depth": search_depth,
+            "max_results": params.max_results,
+            "search_depth": params.search_depth,
             "include_domains": include_domains,
             "exclude_domains": exclude_domains,
-            "include_answer": include_answer,
-            "include_raw_content": include_raw_content,
-            "include_images": include_images,
-            "include_image_descriptions": include_image_descriptions,
+            "include_answer": params.include_answer,
+            "include_raw_content": params.include_raw_content,
+            "include_images": params.include_images,
+            "include_image_descriptions": params.include_image_descriptions,
         }
         response = requests.post(
-            # type: ignore
+            # type: ignore[arg-type]
             f"{TAVILY_API_URL}/search",
-            json=params,
+            json=request_params,
+            timeout=30,
         )
         response.raise_for_status()
         return response.json()
@@ -48,37 +65,37 @@ class EnhancedTavilySearchAPIWrapper(OriginalTavilySearchAPIWrapper):
     async def raw_results_async(
         self,
         query: str,
-        max_results: int | None = 5,
-        search_depth: str | None = "advanced",
-        include_domains: list[str] | None = [],
-        exclude_domains: list[str] | None = [],
-        include_answer: bool | None = False,
-        include_raw_content: bool | None = False,
-        include_images: bool | None = False,
-        include_image_descriptions: bool | None = False,
+        params: SearchParams | None = None,
     ) -> dict:
         """Get results from the Tavily Search API asynchronously."""
+        if params is None:
+            params = SearchParams()
+
+        exclude_domains = params.exclude_domains or []
+        include_domains = params.include_domains or []
 
         # Function to perform the API call
         async def fetch() -> str:
-            params = {
+            request_params = {
                 "api_key": self.tavily_api_key.get_secret_value(),
                 "query": query,
-                "max_results": max_results,
-                "search_depth": search_depth,
+                "max_results": params.max_results,
+                "search_depth": params.search_depth,
                 "include_domains": include_domains,
                 "exclude_domains": exclude_domains,
-                "include_answer": include_answer,
-                "include_raw_content": include_raw_content,
-                "include_images": include_images,
-                "include_image_descriptions": include_image_descriptions,
+                "include_answer": params.include_answer,
+                "include_raw_content": params.include_raw_content,
+                "include_images": params.include_images,
+                "include_image_descriptions": params.include_image_descriptions,
             }
-            async with aiohttp.ClientSession(trust_env=True) as session:
-                async with session.post(f"{TAVILY_API_URL}/search", json=params) as res:
-                    if res.status == 200:
-                        data = await res.text()
-                        return data
-                    raise Exception(f"Error {res.status}: {res.reason}")
+            async with (
+                aiohttp.ClientSession(trust_env=True) as session,
+                session.post(f"{TAVILY_API_URL}/search", json=request_params) as res,
+            ):
+                if res.status == HTTP_OK:
+                    return await res.text()
+                msg = f"Error {res.status}: {res.reason}"
+                raise RuntimeError(msg)
 
         results_json_str = await fetch()
         return json.loads(results_json_str)

@@ -13,7 +13,7 @@ from src.prose.graph.state import ProseState
 logger = logging.getLogger(__name__)
 
 
-def prose_shorter_node(state: ProseState):
+def prose_shorter_node(state: ProseState) -> dict[str, str]:
     logger.info("Generating prose shorter content...")
     model = get_llm_by_type(AGENT_LLM_MAP["prose_writer"])
     prose_content = model.invoke(

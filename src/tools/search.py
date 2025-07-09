@@ -1,5 +1,8 @@
 # Copyright (c) 2025 Bytedance Ltd. and/or its affiliates
 # SPDX-License-Identifier: MIT
+"""Web search tools and utilities for different search engines."""
+
+from __future__ import annotations
 
 import logging
 import os
@@ -7,6 +10,7 @@ import os
 from langchain_community.tools import BraveSearch, DuckDuckGoSearchResults
 from langchain_community.tools.arxiv import ArxivQueryRun
 from langchain_community.utilities import ArxivAPIWrapper, BraveSearchWrapper
+from langchain_core.tools import BaseTool
 
 from src.config import SELECTED_SEARCH_ENGINE, SearchEngine
 from src.tools.decorators import create_logged_tool
@@ -24,7 +28,7 @@ LoggedArxivSearch = create_logged_tool(ArxivQueryRun)
 
 
 # Get the selected search tool
-def get_web_search_tool(max_search_results: int):
+def get_web_search_tool(max_search_results: int, /) -> BaseTool:
     if SearchEngine.TAVILY.value == SELECTED_SEARCH_ENGINE:
         return LoggedTavilySearch(
             name="web_search",
@@ -55,4 +59,5 @@ def get_web_search_tool(max_search_results: int):
                 load_all_available_meta=True,
             ),
         )
-    raise ValueError(f"Unsupported search engine: {SELECTED_SEARCH_ENGINE}")
+    msg = f"Unsupported search engine: {SELECTED_SEARCH_ENGINE}"
+    raise ValueError(msg)

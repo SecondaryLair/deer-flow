@@ -1,5 +1,6 @@
 # Copyright (c) 2025 Bytedance Ltd. and/or its affiliates
 # SPDX-License-Identifier: MIT
+"""Web crawling tools for extracting content from URLs."""
 
 import logging
 from typing import Annotated
@@ -25,5 +26,5 @@ def crawl_tool(
         return {"url": url, "crawled_content": article.to_markdown()[:1000]}
     except BaseException as e:
         error_msg = f"Failed to crawl. Error: {e!r}"
-        logger.error(error_msg)
+        logger.exception(error_msg)
         return error_msg

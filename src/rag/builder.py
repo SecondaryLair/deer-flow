@@ -13,5 +13,6 @@ def build_retriever() -> Retriever | None:
     if RAGProvider.VIKINGDB_KNOWLEDGE_BASE.value == SELECTED_RAG_PROVIDER:
         return VikingDBKnowledgeBaseProvider()
     if SELECTED_RAG_PROVIDER:
-        raise ValueError(f"Unsupported RAG provider: {SELECTED_RAG_PROVIDER}")
+        msg = f"Unsupported RAG provider: {SELECTED_RAG_PROVIDER}"
+        raise ValueError(msg)
     return None

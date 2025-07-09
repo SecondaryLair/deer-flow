@@ -22,7 +22,11 @@ class RetrieverInput(BaseModel):
 
 class RetrieverTool(BaseTool):
     name: str = "local_search_tool"
-    description: str = "Useful for retrieving information from the file with `rag://` uri prefix, it should be higher priority than the web search or writing code. Input should be a search keywords."
+    description: str = (
+        "Useful for retrieving information from the file with `rag://` uri prefix, "
+        "it should be higher priority than the web search or writing code. "
+        "Input should be a search keywords."
+    )
     args_schema: type[BaseModel] = RetrieverInput
 
     retriever: Retriever = Field(default_factory=Retriever)
@@ -31,7 +35,7 @@ class RetrieverTool(BaseTool):
     def _run(
         self,
         keywords: str,
-        run_manager: CallbackManagerForToolRun | None = None,
+        _run_manager: CallbackManagerForToolRun | None = None,
     ) -> list[Document]:
         logger.info(f"Retriever tool query: {keywords}", extra={"resources": self.resources})
         documents = self.retriever.query_relevant_documents(keywords, self.resources)

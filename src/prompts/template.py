@@ -1,18 +1,19 @@
 # Copyright (c) 2025 Bytedance Ltd. and/or its affiliates
 # SPDX-License-Identifier: MIT
+"""Prompt template utilities and management."""
 
 import dataclasses
-import os
-from datetime import datetime
+from datetime import UTC, datetime
+from pathlib import Path
 
-from jinja2 import Environment, FileSystemLoader, select_autoescape
+from jinja2 import Environment, FileSystemLoader, TemplateNotFound, TemplateSyntaxError, select_autoescape
 from langgraph.prebuilt.chat_agent_executor import AgentState
 
 from src.config.configuration import Configuration
 
 # Initialize Jinja2 environment
 env = Environment(
-    loader=FileSystemLoader(os.path.dirname(__file__)),
+    loader=FileSystemLoader(Path(__file__).parent),
     autoescape=select_autoescape(),
     trim_blocks=True,
     lstrip_blocks=True,
@@ -32,8 +33,9 @@ def get_prompt_template(prompt_name: str) -> str:
     try:
         template = env.get_template(f"{prompt_name}.md")
         return template.render()
-    except Exception as e:
-        raise ValueError(f"Error loading template {prompt_name}: {e}")
+    except (FileNotFoundError, TemplateNotFound, TemplateSyntaxError) as e:
+        msg = f"Error loading template {prompt_name}: {e}"
+        raise ValueError(msg) from e
 
 
 def apply_prompt_template(prompt_name: str, state: AgentState, configurable: Configuration = None) -> list:
@@ -49,7 +51,7 @@ def apply_prompt_template(prompt_name: str, state: AgentState, configurable: Con
     """
     # Convert state to dict for template rendering
     state_vars = {
-        "CURRENT_TIME": datetime.now().strftime("%a %b %d %Y %H:%M:%S %z"),
+        "CURRENT_TIME": datetime.now(UTC).strftime("%a %b %d %Y %H:%M:%S %z"),
         **state,
     }
 
@@ -61,5 +63,6 @@ def apply_prompt_template(prompt_name: str, state: AgentState, configurable: Con
         template = env.get_template(f"{prompt_name}.md")
         system_prompt = template.render(**state_vars)
         return [{"role": "system", "content": system_prompt}] + state["messages"]
-    except Exception as e:
-        raise ValueError(f"Error applying template {prompt_name}: {e}")
+    except (TemplateNotFound, TemplateSyntaxError, TypeError, KeyError) as e:
+        msg = f"Error applying template {prompt_name}: {e}"
+        raise ValueError(msg) from e

@@ -19,8 +19,8 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def handle_shutdown(signum, frame):
-    """Handle graceful shutdown on SIGTERM/SIGINT"""
+def handle_shutdown(signum, frame) -> None:  # noqa: ANN001, ARG001
+    """Handle graceful shutdown on SIGTERM/SIGINT."""
     logger.info("Received shutdown signal. Starting graceful shutdown...")
     sys.exit(0)
 
@@ -74,5 +74,5 @@ if __name__ == "__main__":
             log_level=args.log_level,
         )
     except Exception as e:
-        logger.error(f"Failed to start server: {e!s}")
+        logger.exception(f"Failed to start server: {e!s}")
         sys.exit(1)

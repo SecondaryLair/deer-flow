@@ -13,14 +13,14 @@ from src.prose.graph.state import ProseState
 logger = logging.getLogger(__name__)
 
 
-def prose_zap_node(state: ProseState):
+def prose_zap_node(state: ProseState) -> dict[str, str]:
     logger.info("Generating prose zap content...")
     model = get_llm_by_type(AGENT_LLM_MAP["prose_writer"])
     prose_content = model.invoke(
         [
             SystemMessage(content=get_prompt_template("prose/prose_zap")),
             HumanMessage(
-                content=f"For this text: {state['content']}.\nYou have to respect the command: {state['command']}"
+                content=f"For this text: {state['content']}.\nYou have to respect the command: {state['command']}",
             ),
         ],
     )

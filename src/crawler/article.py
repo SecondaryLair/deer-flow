@@ -10,11 +10,11 @@ from markdownify import markdownify as md
 class Article:
     url: str
 
-    def __init__(self, title: str, html_content: str):
+    def __init__(self, title: str, html_content: str) -> None:
         self.title = title
         self.html_content = html_content
 
-    def to_markdown(self, including_title: bool = True) -> str:
+    def to_markdown(self, *, including_title: bool = True) -> str:
         markdown = ""
         if including_title:
             markdown += f"# {self.title}\n\n"
@@ -24,7 +24,7 @@ class Article:
     def to_message(self) -> list[dict]:
         image_pattern = r"!\[.*?\]\((.*?)\)"
 
-        content: list[dict[str, str]] = []
+        content = []
         parts = re.split(image_pattern, self.to_markdown())
 
         for i, part in enumerate(parts):

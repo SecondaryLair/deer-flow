@@ -4,7 +4,7 @@
 import json
 import logging
 import os
-from typing import Annotated, Literal
+from typing import Annotated, Any, Literal
 
 from langchain_core.messages import AIMessage, HumanMessage
 from langchain_core.runnables import RunnableConfig
@@ -13,6 +13,7 @@ from langchain_mcp_adapters.client import MultiServerMCPClient
 from langgraph.types import Command, interrupt
 
 from src.agents import create_agent
+from src.config import SELECTED_SEARCH_ENGINE, SearchEngine
 from src.config.agents import AGENT_LLM_MAP
 from src.config.configuration import Configuration
 from src.llms.llm import get_llm_by_type
@@ -27,7 +28,6 @@ from src.tools import (
 from src.tools.search import LoggedTavilySearch
 from src.utils.json_utils import repair_json_output
 
-from ..config import SELECTED_SEARCH_ENGINE, SearchEngine
 from .types import State
 
 logger = logging.getLogger(__name__)
@@ -35,16 +35,16 @@ logger = logging.getLogger(__name__)
 
 @tool
 def handoff_to_planner(
-    research_topic: Annotated[str, "The topic of the research task to be handed off."],
-    locale: Annotated[str, "The user's detected language locale (e.g., en-US, zh-CN)."],
-):
+    _research_topic: Annotated[str, "The topic of the research task to be handed off."],
+    _locale: Annotated[str, "The user's detected language locale (e.g., en-US, zh-CN)."],
+) -> None:
     """Handoff to planner agent to do plan."""
     # This tool is not returning anything: we're just using it
     # as a way for LLM to signal that it needs to hand off to planner agent
     return
 
 
-def background_investigation_node(state: State, config: RunnableConfig):
+def background_investigation_node(state: State, config: RunnableConfig) -> dict[str, Any]:
     logger.info("background investigation node is running.")
     configurable = Configuration.from_runnable_config(config)
     query = state.get("research_topic")
@@ -76,7 +76,7 @@ def planner_node(state: State, config: RunnableConfig) -> Command[Literal["human
                     + state["background_investigation_results"]
                     + "\n"
                 ),
-            }
+            },
         ]
 
     if configurable.enable_deep_thinking:
@@ -131,7 +131,7 @@ def planner_node(state: State, config: RunnableConfig) -> Command[Literal["human
 
 
 def human_feedback_node(
-    state,
+    state: State,
 ) -> Command[Literal["planner", "research_team", "reporter", "__end__"]]:
     current_plan = state.get("current_plan", "")
     # check if the plan is auto accepted
@@ -152,7 +152,8 @@ def human_feedback_node(
         if feedback and str(feedback).upper().startswith("[ACCEPTED]"):
             logger.info("Plan is accepted by user.")
         else:
-            raise TypeError(f"Interrupt value of {feedback} is not supported.")
+            msg = f"Interrupt value of {feedback} is not supported."
+            raise TypeError(msg)
 
     # if the plan is accepted, run the following node
     plan_iterations = state["plan_iterations"] if state.get("plan_iterations", 0) else 0
@@ -182,7 +183,8 @@ def human_feedback_node(
 
 
 def coordinator_node(
-    state: State, config: RunnableConfig
+    state: State,
+    config: RunnableConfig,
 ) -> Command[Literal["planner", "background_investigator", "__end__"]]:
     """Coordinator node that communicate with customers."""
     logger.info("Coordinator talking.")
@@ -208,8 +210,8 @@ def coordinator_node(
                     locale = tool_call.get("args", {}).get("locale")
                     research_topic = tool_call.get("args", {}).get("research_topic")
                     break
-        except Exception as e:
-            logger.error(f"Error processing tool calls: {e}")
+        except (AttributeError, KeyError, TypeError):
+            logger.exception("Error processing tool calls")
     else:
         logger.warning("Coordinator response contains no tool calls. Terminating workflow execution.")
         logger.debug(f"Coordinator response: {response}")
@@ -224,7 +226,7 @@ def coordinator_node(
     )
 
 
-def reporter_node(state: State, config: RunnableConfig):
+def reporter_node(state: State, config: RunnableConfig) -> dict[str, Any]:
     """Reporter node that write a final report."""
     logger.info("Reporter write final report")
     configurable = Configuration.from_runnable_config(config)
@@ -232,8 +234,9 @@ def reporter_node(state: State, config: RunnableConfig):
     input_ = {
         "messages": [
             HumanMessage(
-                f"# Research Requirements\n\n## Task\n\n{current_plan.title}\n\n## Description\n\n{current_plan.thought}"
-            )
+                f"# Research Requirements\n\n## Task\n\n{current_plan.title}\n\n"
+                f"## Description\n\n{current_plan.thought}",
+            ),
         ],
         "locale": state.get("locale", "en-US"),
     }
@@ -243,9 +246,29 @@ def reporter_node(state: State, config: RunnableConfig):
     # Add a reminder about the new report format, citation style, and table usage
     invoke_messages.append(
         HumanMessage(
-            content="IMPORTANT: Structure your report according to the format in the prompt. Remember to include:\n\n1. Key Points - A bulleted list of the most important findings\n2. Overview - A brief introduction to the topic\n3. Detailed Analysis - Organized into logical sections\n4. Survey Note (optional) - For more comprehensive reports\n5. Key Citations - List all references at the end\n\nFor citations, DO NOT include inline citations in the text. Instead, place all citations in the 'Key Citations' section at the end using the format: `- [Source Title](URL)`. Include an empty line between each citation for better readability.\n\nPRIORITIZE USING MARKDOWN TABLES for data presentation and comparison. Use tables whenever presenting comparative data, statistics, features, or options. Structure tables with clear headers and aligned columns. Example table format:\n\n| Feature | Description | Pros | Cons |\n|---------|-------------|------|------|\n| Feature 1 | Description 1 | Pros 1 | Cons 1 |\n| Feature 2 | Description 2 | Pros 2 | Cons 2 |",
+            content=(
+                "IMPORTANT: Structure your report according to the format in the prompt. "
+                "Remember to include:\n\n"
+                "1. Key Points - A bulleted list of the most important findings\n"
+                "2. Overview - A brief introduction to the topic\n"
+                "3. Detailed Analysis - Organized into logical sections\n"
+                "4. Survey Note (optional) - For more comprehensive reports\n"
+                "5. Key Citations - List all references at the end\n\n"
+                "For citations, DO NOT include inline citations in the text. Instead, "
+                "place all citations in the 'Key Citations' section at the end using the "
+                "format: `- [Source Title](URL)`. Include an empty line between each "
+                "citation for better readability.\n\n"
+                "PRIORITIZE USING MARKDOWN TABLES for data presentation and comparison. "
+                "Use tables whenever presenting comparative data, statistics, features, "
+                "or options. Structure tables with clear headers and aligned columns. "
+                "Example table format:\n\n"
+                "| Feature | Description | Pros | Cons |\n"
+                "|---------|-------------|------|------|\n"
+                "| Feature 1 | Description 1 | Pros 1 | Cons 1 |\n"
+                "| Feature 2 | Description 2 | Pros 2 | Cons 2 |"
+            ),
             name="system",
-        )
+        ),
     )
 
     for observation in observations:
@@ -253,7 +276,7 @@ def reporter_node(state: State, config: RunnableConfig):
             HumanMessage(
                 content=f"Below are some observations for the research task:\n\n{observation}",
                 name="observation",
-            )
+            ),
         )
     logger.debug(f"Current invoke messages: {invoke_messages}")
     response = get_llm_by_type(AGENT_LLM_MAP["reporter"]).invoke(invoke_messages)
@@ -263,12 +286,13 @@ def reporter_node(state: State, config: RunnableConfig):
     return {"final_report": response_content}
 
 
-def research_team_node(state: State):
+def research_team_node(_state: State) -> dict[str, Any]:
     """Research team node that collaborates on tasks."""
     logger.info("Research team is collaborating on tasks.")
+    return {}
 
 
-async def _execute_agent_step(state: State, agent, agent_name: str) -> Command[Literal["research_team"]]:
+async def _execute_agent_step(state: State, agent: any, agent_name: str) -> Command[Literal["research_team"]]:
     """Helper function to execute a step using the specified agent."""
     current_plan = state.get("current_plan")
     observations = state.get("observations", [])
@@ -300,9 +324,12 @@ async def _execute_agent_step(state: State, agent, agent_name: str) -> Command[L
     agent_input = {
         "messages": [
             HumanMessage(
-                content=f"{completed_steps_info}# Current Task\n\n## Title\n\n{current_step.title}\n\n## Description\n\n{current_step.description}\n\n## Locale\n\n{state.get('locale', 'en-US')}"
-            )
-        ]
+                content=(
+                    f"{completed_steps_info}# Current Task\n\n## Title\n\n{current_step.title}\n\n"
+                    f"## Description\n\n{current_step.description}\n\n## Locale\n\n{state.get('locale', 'en-US')}"
+                ),
+            ),
+        ],
     }
 
     # Add citation reminder for researcher agent
@@ -317,14 +344,19 @@ async def _execute_agent_step(state: State, agent, agent_name: str) -> Command[L
                     content=resources_info
                     + "\n\n"
                     + "You MUST use the **local_search_tool** to retrieve the information from the resource files.",
-                )
+                ),
             )
 
         agent_input["messages"].append(
             HumanMessage(
-                content="IMPORTANT: DO NOT include inline citations in the text. Instead, track all sources and include a References section at the end using link reference format. Include an empty line between each citation for better readability. Use this format for each reference:\n- [Source Title](URL)\n\n- [Another Source](URL)",
+                content=(
+                    "IMPORTANT: DO NOT include inline citations in the text. Instead, track all sources "
+                    "and include a References section at the end using link reference format. "
+                    "Include an empty line between each citation for better readability. "
+                    "Use this format for each reference:\n- [Source Title](URL)\n\n- [Another Source](URL)"
+                ),
                 name="system",
-            )
+            ),
         )
 
     # Invoke the agent
@@ -339,13 +371,13 @@ async def _execute_agent_step(state: State, agent, agent_name: str) -> Command[L
         else:
             logger.warning(
                 f"AGENT_RECURSION_LIMIT value '{env_value_str}' (parsed as {parsed_limit}) is not positive. "
-                f"Using default value {default_recursion_limit}."
+                f"Using default value {default_recursion_limit}.",
             )
             recursion_limit = default_recursion_limit
     except ValueError:
         raw_env_value = os.getenv("AGENT_RECURSION_LIMIT")
         logger.warning(
-            f"Invalid AGENT_RECURSION_LIMIT value: '{raw_env_value}'. Using default value {default_recursion_limit}."
+            f"Invalid AGENT_RECURSION_LIMIT value: '{raw_env_value}'. Using default value {default_recursion_limit}.",
         )
         recursion_limit = default_recursion_limit
 
@@ -366,9 +398,9 @@ async def _execute_agent_step(state: State, agent, agent_name: str) -> Command[L
                 HumanMessage(
                     content=response_content,
                     name=agent_name,
-                )
+                ),
             ],
-            "observations": observations + [response_content],
+            "observations": [*observations, response_content],
         },
         goto="research_team",
     )
@@ -378,7 +410,7 @@ async def _setup_and_execute_agent_step(
     state: State,
     config: RunnableConfig,
     agent_type: str,
-    default_tools: list,
+    default_tools: list[Any],
 ) -> Command[Literal["research_team"]]:
     """Helper function to set up an agent with appropriate tools and execute a step.
 
@@ -428,7 +460,7 @@ async def _setup_and_execute_agent_step(
 
 
 async def researcher_node(state: State, config: RunnableConfig) -> Command[Literal["research_team"]]:
-    """Researcher node that do research"""
+    """Researcher node that do research."""
     logger.info("Researcher node is researching.")
     configurable = Configuration.from_runnable_config(config)
     tools = [get_web_search_tool(configurable.max_search_results), crawl_tool]

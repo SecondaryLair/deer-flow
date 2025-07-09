@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 from enum import Enum
+from typing import ClassVar
 
 from pydantic import BaseModel, Field
 
@@ -19,6 +20,26 @@ class Step(BaseModel):
     execution_res: str | None = Field(default=None, description="The Step execution result")
 
 
+# Example data as module-level constant
+PLAN_EXAMPLES = [
+    {
+        "has_enough_context": False,
+        "thought": ("To understand the current market trends in AI, we need to gather comprehensive information."),
+        "title": "AI Market Research Plan",
+        "steps": [
+            {
+                "need_search": True,
+                "title": "Current AI Market Analysis",
+                "description": (
+                    "Collect data on market size, growth rates, major players, and investment trends in AI sector."
+                ),
+                "step_type": "research",
+            },
+        ],
+    },
+]
+
+
 class Plan(BaseModel):
     locale: str = Field(..., description="e.g. 'en-US' or 'zh-CN', based on the user's language")
     has_enough_context: bool
@@ -30,24 +51,6 @@ class Plan(BaseModel):
     )
 
     class Config:
-        json_schema_extra = {
-            "examples": [
-                {
-                    "has_enough_context": False,
-                    "thought": (
-                        "To understand the current market trends in AI, we need to gather comprehensive information."
-                    ),
-                    "title": "AI Market Research Plan",
-                    "steps": [
-                        {
-                            "need_search": True,
-                            "title": "Current AI Market Analysis",
-                            "description": (
-                                "Collect data on market size, growth rates, major players, and investment trends in AI sector."
-                            ),
-                            "step_type": "research",
-                        }
-                    ],
-                }
-            ]
+        json_schema_extra: ClassVar = {
+            "examples": PLAN_EXAMPLES,
         }

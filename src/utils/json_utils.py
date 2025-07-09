@@ -1,5 +1,6 @@
 # Copyright (c) 2025 Bytedance Ltd. and/or its affiliates
 # SPDX-License-Identifier: MIT
+"""JSON utility functions for repairing and normalizing JSON output."""
 
 import json
 import logging
@@ -35,6 +36,6 @@ def repair_json_output(content: str) -> str:
             # Try to repair and parse JSON
             repaired_content = json_repair.loads(content)
             return json.dumps(repaired_content, ensure_ascii=False)
-        except Exception as e:
+        except (json.JSONDecodeError, ValueError) as e:
             logger.warning(f"JSON repair failed: {e}")
     return content

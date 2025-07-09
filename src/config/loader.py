@@ -1,7 +1,11 @@
 # Copyright (c) 2025 Bytedance Ltd. and/or its affiliates
 # SPDX-License-Identifier: MIT
+"""Configuration loader utilities."""
+
+from __future__ import annotations
 
 import os
+from pathlib import Path
 from typing import Any
 
 import yaml
@@ -37,17 +41,17 @@ _config_cache: dict[str, dict[str, Any]] = {}
 
 def load_yaml_config(file_path: str) -> dict[str, Any]:
     """Load and process YAML configuration file."""
-    # 如果文件不存在，返回{}
-    if not os.path.exists(file_path):
+    path = Path(file_path)
+    # 如果文件不存在, 返回{}
+    if not path.exists():
         return {}
 
     # 检查缓存中是否已存在配置
     if file_path in _config_cache:
         return _config_cache[file_path]
 
-    # 如果缓存中不存在，则加载并处理配置
-    with open(file_path) as f:
-        config = yaml.safe_load(f)
+    # 如果缓存中不存在, 则加载并处理配置
+    config = yaml.safe_load(path.read_text(encoding="utf-8"))
     processed_config = process_dict(config)
 
     # 将处理后的配置存入缓存

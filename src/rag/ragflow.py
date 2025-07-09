@@ -8,6 +8,9 @@ import requests
 
 from src.rag.retriever import Chunk, Document, Resource, Retriever
 
+# HTTP status codes
+HTTP_OK = 200
+
 
 class RAGFlowProvider(Retriever):
     """RAGFlowProvider is a provider that uses RAGFlow to retrieve documents."""
@@ -16,22 +19,26 @@ class RAGFlowProvider(Retriever):
     api_key: str
     page_size: int = 10
 
-    def __init__(self):
+    def __init__(self) -> None:
         api_url = os.getenv("RAGFLOW_API_URL")
         if not api_url:
-            raise ValueError("RAGFLOW_API_URL is not set")
+            msg = "RAGFLOW_API_URL is not set"
+            raise ValueError(msg)
         self.api_url = api_url
 
         api_key = os.getenv("RAGFLOW_API_KEY")
         if not api_key:
-            raise ValueError("RAGFLOW_API_KEY is not set")
+            msg = "RAGFLOW_API_KEY is not set"
+            raise ValueError(msg)
         self.api_key = api_key
 
         page_size = os.getenv("RAGFLOW_PAGE_SIZE")
         if page_size:
             self.page_size = int(page_size)
 
-    def query_relevant_documents(self, query: str, resources: list[Resource] = []) -> list[Document]:
+    def query_relevant_documents(self, query: str, resources: list[Resource] | None = None) -> list[Document]:
+        if resources is None:
+            resources = []
         headers = {
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json",
@@ -53,10 +60,11 @@ class RAGFlowProvider(Retriever):
             "page_size": self.page_size,
         }
 
-        response = requests.post(f"{self.api_url}/api/v1/retrieval", headers=headers, json=payload)
+        response = requests.post(f"{self.api_url}/api/v1/retrieval", headers=headers, json=payload, timeout=30)
 
-        if response.status_code != 200:
-            raise Exception(f"Failed to query documents: {response.text}")
+        if response.status_code != HTTP_OK:
+            msg = f"Failed to query documents: {response.text}"
+            raise RuntimeError(msg)
 
         result = response.json()
         data = result.get("data", {})
@@ -77,7 +85,7 @@ class RAGFlowProvider(Retriever):
                     Chunk(
                         content=chunk.get("content"),
                         similarity=chunk.get("similarity"),
-                    )
+                    ),
                 )
 
         return list(docs.values())
@@ -92,19 +100,20 @@ class RAGFlowProvider(Retriever):
         if query:
             params["name"] = query
 
-        response = requests.get(f"{self.api_url}/api/v1/datasets", headers=headers, params=params)
+        response = requests.get(f"{self.api_url}/api/v1/datasets", headers=headers, params=params, timeout=30)
 
-        if response.status_code != 200:
-            raise Exception(f"Failed to list resources: {response.text}")
+        if response.status_code != HTTP_OK:
+            msg = f"Failed to list resources: {response.text}"
+            raise RuntimeError(msg)
 
         result = response.json()
         resources = []
 
-        for item in result.get("data", []):
+        for item_data in result.get("data", []):
             item = Resource(
-                uri=f"rag://dataset/{item.get('id')}",
-                title=item.get("name", ""),
-                description=item.get("description", ""),
+                uri=f"rag://dataset/{item_data.get('id')}",
+                title=item_data.get("name", ""),
+                description=item_data.get("description", ""),
             )
             resources.append(item)
 
@@ -114,5 +123,6 @@ class RAGFlowProvider(Retriever):
 def parse_uri(uri: str) -> tuple[str, str]:
     parsed = urlparse(uri)
     if parsed.scheme != "rag":
-        raise ValueError(f"Invalid URI: {uri}")
+        msg = f"Invalid URI: {uri}"
+        raise ValueError(msg)
     return parsed.path.split("/")[1], parsed.fragment
