@@ -36,8 +36,8 @@ logger = logging.getLogger(__name__)
 
 @tool
 def handoff_to_planner(
-    _research_topic: Annotated[str, "The topic of the research task to be handed off."],
-    _locale: Annotated[str, "The user's detected language locale (e.g., en-US, zh-CN)."],
+    research_topic: Annotated[str, "The topic of the research task to be handed off."],  # noqa: ARG001
+    locale: Annotated[str, "The user's detected language locale (e.g., en-US, zh-CN)."],  # noqa: ARG001
 ) -> None:
     """Handoff to planner agent to do plan."""
     # This tool is not returning anything: we're just using it
