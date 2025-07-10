@@ -657,8 +657,6 @@ def test_coordinator_node_tool_calls_exception_handling(
     patch_handoff_to_planner,
     patch_logger,
 ):
-    # tool_calls raises exception in processing
-    tool_calls = [{"name": "handoff_to_planner", "args": None}]
     with (
         patch("deerflowx.graph.nodes.AGENT_LLM_MAP", {"coordinator": "basic"}),
         patch("deerflowx.graph.nodes.get_llm_by_type") as mock_get_llm,
@@ -666,11 +664,11 @@ def test_coordinator_node_tool_calls_exception_handling(
         mock_llm = MagicMock()
         mock_llm.bind_tools.return_value = mock_llm
 
-        # Simulate tool_call.get("args", {}) raising AttributeError
+        # Simulate tool_call.get("args", {}) raising AttributeError (which is caught)
         class BadToolCall(dict):
             def get(self, key, default=None):
                 if key == "args":
-                    raise Exception("bad args")
+                    raise AttributeError("bad args")  # Changed from Exception to AttributeError
                 return super().get(key, default)
 
         mock_llm.invoke.return_value = make_mock_llm_response([BadToolCall({"name": "handoff_to_planner"})])

@@ -139,8 +139,8 @@ class TestMCPEndpoint:
 
         response = client.post("/api/mcp/server/metadata", json=request_data)
 
-        assert response.status_code == 500
-        assert response.json()["detail"] == "Internal Server Error"
+        assert response.status_code == 400
+        assert response.json()["detail"] == "MCP Server Error"
 
 
 class TestRAGEndpoints:

@@ -36,7 +36,7 @@ class Plan:
 # This avoids the cascade of imports that would normally happen
 def load_state_class():
     # Get the absolute path to the types.py file
-    src_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src"))
+    src_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src", "deerflowx"))
     types_path = os.path.join(src_dir, "graph", "types.py")
 
     # Create a namespace for the module

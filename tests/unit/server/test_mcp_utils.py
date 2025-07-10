@@ -44,13 +44,15 @@ async def test_load_mcp_tools_stdio_success(mock_stdio_client, mock_StdioServerP
     mock_client = MagicMock()
     mock_stdio_client.return_value = mock_client
 
-    result = await mcp_utils.load_mcp_tools(
+    config = mcp_utils.MCPServerConfig(
         server_type="stdio",
         command="echo",
         args=["foo"],
         env={"FOO": "BAR"},
         timeout_seconds=3,
     )
+    result = await mcp_utils.load_mcp_tools(config)
+
     assert result == ["toolA"]
     mock_StdioServerParameters.assert_called_once_with(command="echo", args=["foo"], env={"FOO": "BAR"})
     mock_stdio_client.assert_called_once_with(params)
@@ -59,8 +61,9 @@ async def test_load_mcp_tools_stdio_success(mock_stdio_client, mock_StdioServerP
 
 @pytest.mark.asyncio
 async def test_load_mcp_tools_stdio_missing_command():
+    config = mcp_utils.MCPServerConfig(server_type="stdio")
     with pytest.raises(HTTPException) as exc:
-        await mcp_utils.load_mcp_tools(server_type="stdio")
+        await mcp_utils.load_mcp_tools(config)
     assert exc.value.status_code == 400
     assert "Command is required" in exc.value.detail
 
@@ -73,11 +76,13 @@ async def test_load_mcp_tools_sse_success(mock_sse_client, mock_get_tools):
     mock_client = MagicMock()
     mock_sse_client.return_value = mock_client
 
-    result = await mcp_utils.load_mcp_tools(
+    config = mcp_utils.MCPServerConfig(
         server_type="sse",
         url="http://localhost:1234",
         timeout_seconds=7,
     )
+    result = await mcp_utils.load_mcp_tools(config)
+
     assert result == ["toolB"]
     mock_sse_client.assert_called_once_with(url="http://localhost:1234")
     mock_get_tools.assert_awaited_once_with(mock_client, 7)
@@ -85,16 +90,18 @@ async def test_load_mcp_tools_sse_success(mock_sse_client, mock_get_tools):
 
 @pytest.mark.asyncio
 async def test_load_mcp_tools_sse_missing_url():
+    config = mcp_utils.MCPServerConfig(server_type="sse")
     with pytest.raises(HTTPException) as exc:
-        await mcp_utils.load_mcp_tools(server_type="sse")
+        await mcp_utils.load_mcp_tools(config)
     assert exc.value.status_code == 400
     assert "URL is required" in exc.value.detail
 
 
 @pytest.mark.asyncio
 async def test_load_mcp_tools_unsupported_type():
+    config = mcp_utils.MCPServerConfig(server_type="unknown")
     with pytest.raises(HTTPException) as exc:
-        await mcp_utils.load_mcp_tools(server_type="unknown")
+        await mcp_utils.load_mcp_tools(config)
     assert exc.value.status_code == 400
     assert "Unsupported server type" in exc.value.detail
 
@@ -108,7 +115,8 @@ async def test_load_mcp_tools_exception_handling(mock_stdio_client, mock_StdioSe
     mock_StdioServerParameters.return_value = MagicMock()
     mock_stdio_client.return_value = MagicMock()
 
+    config = mcp_utils.MCPServerConfig(server_type="stdio", command="foo")
     with pytest.raises(HTTPException) as exc:
-        await mcp_utils.load_mcp_tools(server_type="stdio", command="foo")
+        await mcp_utils.load_mcp_tools(config)
     assert exc.value.status_code == 500
     assert "unexpected error" in exc.value.detail

@@ -20,7 +20,7 @@ def test_retriever_input_model():
 
 def test_retriever_tool_init():
     mock_retriever = Mock(spec=Retriever)
-    resources = [Resource(uri="test://uri", title="Test")]
+    resources = [Resource(uri="test://uri", title="Test", description="")]
     tool = RetrieverTool(retriever=mock_retriever, resources=resources)
 
     assert tool.name == "local_search_tool"
@@ -33,10 +33,10 @@ def test_retriever_tool_init():
 def test_retriever_tool_run_with_results():
     mock_retriever = Mock(spec=Retriever)
     chunk = Chunk(content="test content", similarity=0.9)
-    doc = Document(id="doc1", chunks=[chunk])
+    doc = Document(doc_id="doc1", chunks=[chunk])
     mock_retriever.query_relevant_documents.return_value = [doc]
 
-    resources = [Resource(uri="test://uri", title="Test")]
+    resources = [Resource(uri="test://uri", title="Test", description="")]
     tool = RetrieverTool(retriever=mock_retriever, resources=resources)
 
     result = tool._run("test keywords")
@@ -51,7 +51,7 @@ def test_retriever_tool_run_no_results():
     mock_retriever = Mock(spec=Retriever)
     mock_retriever.query_relevant_documents.return_value = []
 
-    resources = [Resource(uri="test://uri", title="Test")]
+    resources = [Resource(uri="test://uri", title="Test", description="")]
     tool = RetrieverTool(retriever=mock_retriever, resources=resources)
 
     result = tool._run("test keywords")
@@ -63,10 +63,10 @@ def test_retriever_tool_run_no_results():
 async def test_retriever_tool_arun():
     mock_retriever = Mock(spec=Retriever)
     chunk = Chunk(content="async content", similarity=0.8)
-    doc = Document(id="doc2", chunks=[chunk])
+    doc = Document(doc_id="doc2", chunks=[chunk])
     mock_retriever.query_relevant_documents.return_value = [doc]
 
-    resources = [Resource(uri="test://uri", title="Test")]
+    resources = [Resource(uri="test://uri", title="Test", description="")]
     tool = RetrieverTool(retriever=mock_retriever, resources=resources)
 
     mock_run_manager = Mock(spec=AsyncCallbackManagerForToolRun)
@@ -86,7 +86,7 @@ def test_get_retriever_tool_success(mock_build_retriever):
     mock_retriever = Mock(spec=Retriever)
     mock_build_retriever.return_value = mock_retriever
 
-    resources = [Resource(uri="test://uri", title="Test")]
+    resources = [Resource(uri="test://uri", title="Test", description="")]
     tool = get_retriever_tool(resources)
 
     assert isinstance(tool, RetrieverTool)
@@ -103,7 +103,7 @@ def test_get_retriever_tool_empty_resources():
 def test_get_retriever_tool_no_retriever(mock_build_retriever):
     mock_build_retriever.return_value = None
 
-    resources = [Resource(uri="test://uri", title="Test")]
+    resources = [Resource(uri="test://uri", title="Test", description="")]
     result = get_retriever_tool(resources)
 
     assert result is None
@@ -113,7 +113,7 @@ def test_retriever_tool_run_with_callback_manager():
     mock_retriever = Mock(spec=Retriever)
     mock_retriever.query_relevant_documents.return_value = []
 
-    resources = [Resource(uri="test://uri", title="Test")]
+    resources = [Resource(uri="test://uri", title="Test", description="")]
     tool = RetrieverTool(retriever=mock_retriever, resources=resources)
 
     mock_callback_manager = Mock(spec=CallbackManagerForToolRun)

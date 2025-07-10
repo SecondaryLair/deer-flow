@@ -14,8 +14,10 @@ from deerflowx.tools.tavily_search.tavily_search_api_wrapper import (
 class TestEnhancedTavilySearchAPIWrapper:
     @pytest.fixture
     def wrapper(self):
+        from pydantic import SecretStr
+
         with patch("deerflowx.tools.tavily_search.tavily_search_api_wrapper.OriginalTavilySearchAPIWrapper"):
-            wrapper = EnhancedTavilySearchAPIWrapper(tavily_api_key="dummy-key")
+            wrapper = EnhancedTavilySearchAPIWrapper(tavily_api_key=SecretStr("dummy-key"))
             # The parent class is mocked, so initialization won't fail
             return wrapper
 
@@ -41,12 +43,15 @@ class TestEnhancedTavilySearchAPIWrapper:
 
     @patch("deerflowx.tools.tavily_search.tavily_search_api_wrapper.requests.post")
     def test_raw_results_success(self, mock_post, wrapper, mock_response_data):
+        from deerflowx.tools.tavily_search.tavily_search_api_wrapper import SearchParams
+
         mock_response = Mock()
         mock_response.json.return_value = mock_response_data
         mock_response.raise_for_status.return_value = None
         mock_post.return_value = mock_response
 
-        result = wrapper.raw_results("test query", max_results=10)
+        params = SearchParams(max_results=10)
+        result = wrapper.raw_results("test query", params)
 
         assert result == mock_response_data
         mock_post.assert_called_once()
@@ -57,13 +62,14 @@ class TestEnhancedTavilySearchAPIWrapper:
 
     @patch("deerflowx.tools.tavily_search.tavily_search_api_wrapper.requests.post")
     def test_raw_results_with_all_parameters(self, mock_post, wrapper, mock_response_data):
+        from deerflowx.tools.tavily_search.tavily_search_api_wrapper import SearchParams
+
         mock_response = Mock()
         mock_response.json.return_value = mock_response_data
         mock_response.raise_for_status.return_value = None
         mock_post.return_value = mock_response
 
-        result = wrapper.raw_results(
-            "test query",
+        params = SearchParams(
             max_results=3,
             search_depth="basic",
             include_domains=["example.com"],
@@ -73,14 +79,15 @@ class TestEnhancedTavilySearchAPIWrapper:
             include_images=True,
             include_image_descriptions=True,
         )
+        result = wrapper.raw_results("test query", params)
 
         assert result == mock_response_data
         call_args = mock_post.call_args
-        params = call_args.kwargs["json"]
-        assert params["include_domains"] == ["example.com"]
-        assert params["exclude_domains"] == ["spam.com"]
-        assert params["include_answer"] is True
-        assert params["include_raw_content"] is True
+        request_params = call_args.kwargs["json"]
+        assert request_params["include_domains"] == ["example.com"]
+        assert request_params["exclude_domains"] == ["spam.com"]
+        assert request_params["include_answer"] is True
+        assert request_params["include_raw_content"] is True
 
     @patch("deerflowx.tools.tavily_search.tavily_search_api_wrapper.requests.post")
     def test_raw_results_http_error(self, mock_post, wrapper):
@@ -89,7 +96,7 @@ class TestEnhancedTavilySearchAPIWrapper:
         mock_post.return_value = mock_response
 
         with pytest.raises(requests.HTTPError):
-            wrapper.raw_results("test query")
+            wrapper.raw_results("test query")  # This will use default SearchParams
 
     @pytest.mark.asyncio
     async def test_raw_results_async_success(self, wrapper, mock_response_data):

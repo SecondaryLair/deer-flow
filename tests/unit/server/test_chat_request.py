@@ -129,7 +129,8 @@ async def test_load_mcp_tools_exception_handling(
     mock_StdioServerParameters.return_value = MagicMock()
     mock_stdio_client.return_value = MagicMock()
 
+    config = mcp_utils.MCPServerConfig(server_type="stdio", command="foo")
     with pytest.raises(HTTPException) as exc:
-        await mcp_utils.load_mcp_tools(server_type="stdio", command="foo")  # Use await
+        await mcp_utils.load_mcp_tools(config)  # Use await
     assert exc.value.status_code == 500
     assert "unexpected error" in exc.value.detail

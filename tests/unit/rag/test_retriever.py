@@ -15,7 +15,7 @@ def test_chunk_init():
 def test_document_init_and_to_dict():
     chunk1 = Chunk(content="chunk1", similarity=0.8)
     chunk2 = Chunk(content="chunk2", similarity=0.7)
-    doc = Document(id="doc1", url="http://example.com", title="Title", chunks=[chunk1, chunk2])
+    doc = Document(doc_id="doc1", url="http://example.com", title="Title", chunks=[chunk1, chunk2])
     assert doc.id == "doc1"
     assert doc.url == "http://example.com"
     assert doc.title == "Title"
@@ -29,7 +29,7 @@ def test_document_init_and_to_dict():
 
 def test_document_to_dict_optional_fields():
     chunk = Chunk(content="only chunk", similarity=1.0)
-    doc = Document(id="doc2", chunks=[chunk])
+    doc = Document(doc_id="doc2", chunks=[chunk])
     d = doc.to_dict()
     assert d["id"] == "doc2"
     assert d["content"] == "only chunk"
@@ -38,7 +38,7 @@ def test_document_to_dict_optional_fields():
 
 
 def test_resource_model():
-    resource = Resource(uri="uri1", title="Resource Title")
+    resource = Resource(uri="uri1", title="Resource Title", description="")
     assert resource.uri == "uri1"
     assert resource.title == "Resource Title"
     assert resource.description == ""
@@ -52,10 +52,10 @@ def test_resource_model_with_description():
 def test_retriever_abstract_methods():
     class DummyRetriever(Retriever):
         def list_resources(self, query=None):
-            return [Resource(uri="uri", title="title")]
+            return [Resource(uri="uri", title="title", description="")]
 
         def query_relevant_documents(self, query, resources=None):
-            return [Document(id="id", chunks=[])]
+            return [Document(doc_id="id", chunks=[])]
 
     retriever = DummyRetriever()
     resources = retriever.list_resources()

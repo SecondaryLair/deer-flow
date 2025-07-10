@@ -23,8 +23,8 @@ class DummyChunk:
 
 
 class DummyDocument:
-    def __init__(self, id, title, chunks=None):
-        self.id = id
+    def __init__(self, doc_id, title, chunks=None):
+        self.id = doc_id
         self.title = title
         self.chunks = chunks or []
 

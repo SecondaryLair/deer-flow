@@ -92,7 +92,7 @@ class TestPythonReplTool:
 
         # Assert
         mock_repl.run.assert_called_once_with(code)
-        mock_logger.error.assert_called_with(repr(exception))
+        mock_logger.exception.assert_called_once_with(repr(exception))
         assert "Error executing code:" in result
         assert code in result
         assert repr(exception) in result

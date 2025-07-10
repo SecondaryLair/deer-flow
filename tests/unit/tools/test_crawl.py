@@ -62,7 +62,7 @@ class TestCrawlTool:
         assert isinstance(result, str)
         assert "Failed to crawl" in result
         assert "Network error" in result
-        mock_logger.error.assert_called_once()
+        mock_logger.exception.assert_called_once()
 
     @patch("deerflowx.tools.crawl.Crawler")
     @patch("deerflowx.tools.crawl.logger")
@@ -79,7 +79,7 @@ class TestCrawlTool:
         assert isinstance(result, str)
         assert "Failed to crawl" in result
         assert "Crawler init error" in result
-        mock_logger.error.assert_called_once()
+        mock_logger.exception.assert_called_once()
 
     @patch("deerflowx.tools.crawl.Crawler")
     @patch("deerflowx.tools.crawl.logger")
@@ -100,4 +100,4 @@ class TestCrawlTool:
         assert isinstance(result, str)
         assert "Failed to crawl" in result
         assert "Markdown conversion error" in result
-        mock_logger.error.assert_called_once()
+        mock_logger.exception.assert_called_once()
