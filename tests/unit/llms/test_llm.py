@@ -38,13 +38,13 @@ def patch_llm_classes(monkeypatch):
 def mock_settings(monkeypatch):
     """Mock settings with test configuration."""
     test_settings = AppSettings()
-    test_settings._basic_model = BasicModelSettings(
+    test_settings.basic_model = BasicModelSettings(
         api_key="test_basic_key", base_url="http://test-basic", model="test-basic-model"
     )
-    test_settings._reasoning_model = ReasoningModelSettings(
+    test_settings.reasoning_model = ReasoningModelSettings(
         api_key="test_reasoning_key", base_url="http://test-reasoning", model="test-reasoning-model"
     )
-    test_settings._vision_model = VisionModelSettings(
+    test_settings.vision_model = VisionModelSettings(
         api_key="test_vision_key", base_url="http://test-vision", model="test-vision-model"
     )
 
@@ -90,14 +90,14 @@ def test_create_llm_instance_invalid_type(mock_settings):
 
 def test_create_llm_instance_no_api_key(mock_settings):
     """Test creating LLM without API key raises error."""
-    mock_settings._basic_model.api_key = ""
+    mock_settings.basic_model.api_key = ""
     with pytest.raises(ValueError, match="No API key configured"):
         llm._create_llm_instance("basic")
 
 
 def test_create_llm_instance_reasoning_missing_config(mock_settings):
     """Test creating reasoning model without required config raises error."""
-    mock_settings._reasoning_model.base_url = None
+    mock_settings.reasoning_model.base_url = None
     with pytest.raises(ValueError, match="Reasoning model requires base_url and model"):
         llm._create_llm_instance("reasoning")
 
@@ -123,7 +123,7 @@ def test_get_configured_llm_models(mock_settings):
 
 def test_get_configured_llm_models_reasoning_missing_base_url(mock_settings):
     """Test that reasoning model without base_url is not included."""
-    mock_settings._reasoning_model.base_url = None
+    mock_settings.reasoning_model.base_url = None
     result = llm.get_configured_llm_models()
     assert "reasoning" not in result
 
@@ -138,7 +138,7 @@ def test_clear_llm_cache(mock_settings):
 
 def test_ssl_verification_disabled(mock_settings, monkeypatch):
     """Test SSL verification can be disabled."""
-    mock_settings._basic_model.verify_ssl = False
+    mock_settings.basic_model.verify_ssl = False
 
     # Mock httpx clients
     mock_client = object()

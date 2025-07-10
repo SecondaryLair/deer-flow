@@ -48,9 +48,9 @@ class AppSettings(BaseSettings):
     search_api: str = Field(default="tavily", alias="SEARCH_API")
     rag_provider: str | None = Field(default=None, alias="RAG_PROVIDER")
 
-    basic_model = BasicModelSettings()
-    reasoning_model = ReasoningModelSettings()
-    vision_model = VisionModelSettings()
+    basic_model: BasicModelSettings = BasicModelSettings()
+    reasoning_model: ReasoningModelSettings = ReasoningModelSettings()
+    vision_model: VisionModelSettings = VisionModelSettings()
 
 
 # Global settings instance

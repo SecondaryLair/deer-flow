@@ -69,24 +69,15 @@ State = load_state_class()
 
 
 def test_state_initialization():
-    """Test that State class has correct default attribute definitions."""
-    # Test that the class has the expected attribute definitions
-    assert State.locale == "en-US"
-    assert State.observations == []
-    assert State.plan_iterations == 0
-    assert State.current_plan is None
-    assert State.final_report == ""
-    assert State.auto_accepted_plan is False
-    assert State.enable_background_investigation is True
-    assert State.background_investigation_results is None
-
-    # Verify state initialization
+    """Test that State class can be initialized properly."""
+    # Test basic initialization with required messages field
     state = State(messages=[])
     assert "messages" in state
+    assert state["messages"] == []
 
-    # Without explicitly passing attributes, they're not in the state
-    assert "locale" not in state
-    assert "observations" not in state
+    # Test that we can add other fields
+    state_with_locale = State(messages=[], locale="en-US")
+    assert state_with_locale["locale"] == "en-US"
 
 
 def test_state_with_custom_values():

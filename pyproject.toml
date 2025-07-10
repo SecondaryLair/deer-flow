@@ -30,8 +30,8 @@ dependencies = [
     "mcp>=1.6.0",
     "volcengine>=1.0.191",
     "dowhen>=0.1.0",
-    "pydantic-settings>=2.8.1",
     "python-dotenv>=1.0.1",
+    "pydantic-settings>=2.8.1",
 ]
 
 [dependency-groups]
