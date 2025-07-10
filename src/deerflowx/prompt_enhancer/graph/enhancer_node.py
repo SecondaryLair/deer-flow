@@ -58,7 +58,7 @@ def prompt_enhancer_node(state: PromptEnhancerState) -> dict[str, str]:
                 enhanced_prompt = enhanced_prompt[len(prefix) :].strip()
                 break
 
-    except (ValueError, TypeError, AttributeError, RuntimeError):
+    except BaseException:
         logger.exception("Error in prompt enhancement")
         return {"output": state["prompt"]}
     else:

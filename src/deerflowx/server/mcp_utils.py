@@ -3,10 +3,9 @@
 """MCP (Model Context Protocol) utility functions and client management."""
 
 import logging
-from collections.abc import AsyncContextManager
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import Any
+from typing import Any, AsyncContextManager
 
 from fastapi import HTTPException
 from mcp import ClientSession, StdioServerParameters
@@ -93,7 +92,7 @@ async def load_mcp_tools(
 
         raise HTTPException(status_code=400, detail=f"Unsupported server type: {config.server_type}")
 
-    except (ValueError, TypeError, ConnectionError, TimeoutError, RuntimeError) as e:
+    except BaseException as e:
         if not isinstance(e, HTTPException):
             logger.exception("Error loading MCP tools")
             raise HTTPException(status_code=500, detail=str(e)) from e

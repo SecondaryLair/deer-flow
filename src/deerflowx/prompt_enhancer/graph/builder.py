@@ -1,7 +1,8 @@
 # Copyright (c) 2025 Bytedance Ltd. and/or its affiliates
 # SPDX-License-Identifier: MIT
 
-from langgraph.graph import CompiledGraph, StateGraph
+from langgraph.graph import StateGraph
+from langgraph.graph.graph import CompiledGraph
 
 from deerflowx.prompt_enhancer.graph.enhancer_node import prompt_enhancer_node
 from deerflowx.prompt_enhancer.graph.state import PromptEnhancerState

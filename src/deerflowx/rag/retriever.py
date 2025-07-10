@@ -38,9 +38,10 @@ class Document:
         self.chunks = chunks
 
     def to_dict(self) -> dict:
+        chunks = self.chunks or []
         d = {
             "id": self.id,
-            "content": "\n\n".join([chunk.content for chunk in self.chunks]),
+            "content": "\n\n".join([chunk.content for chunk in chunks]),
         }
         if self.url:
             d["url"] = self.url

@@ -71,7 +71,7 @@ class RAGFlowProvider(Retriever):
         doc_aggs = data.get("doc_aggs", [])
         docs: dict[str, Document] = {
             doc.get("doc_id"): Document(
-                id=doc.get("doc_id"),
+                doc_id=doc.get("doc_id"),
                 title=doc.get("doc_name"),
                 chunks=[],
             )
@@ -80,7 +80,7 @@ class RAGFlowProvider(Retriever):
 
         for chunk in data.get("chunks", []):
             doc = docs.get(chunk.get("document_id"))
-            if doc:
+            if doc and doc.chunks is not None:
                 doc.chunks.append(
                     Chunk(
                         content=chunk.get("content"),

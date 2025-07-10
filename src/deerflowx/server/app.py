@@ -203,7 +203,7 @@ async def generate_prose(request: GenerateProseRequest) -> StreamingResponse:
             (f"data: {event[0].content}\n\n" async for _, event in events),
             media_type="text/event-stream",
         )
-    except (ValueError, TypeError, RuntimeError) as e:
+    except BaseException as e:
         logger.exception("Error occurred during prose generation")
         raise HTTPException(status_code=500, detail=INTERNAL_SERVER_ERROR_DETAIL) from e
 
@@ -241,7 +241,7 @@ async def enhance_prompt(request: EnhancePromptRequest) -> dict[str, str]:
             },
         )
         return {"result": final_state["output"]}
-    except (ValueError, TypeError, RuntimeError) as e:
+    except BaseException as e:
         logger.exception("Error occurred during prompt enhancement")
         raise HTTPException(status_code=500, detail=INTERNAL_SERVER_ERROR_DETAIL) from e
 

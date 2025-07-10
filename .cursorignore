@@ -11,7 +11,6 @@ dist/
 build/
 
 # 隐藏非核心目录
-docs/
 examples/
 assets/
 

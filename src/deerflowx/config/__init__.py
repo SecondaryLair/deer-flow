@@ -2,14 +2,9 @@
 # SPDX-License-Identifier: MIT
 """Configuration management and loading utilities."""
 
-from dotenv import load_dotenv
-
-from .loader import load_yaml_config
 from .questions import BUILT_IN_QUESTIONS, BUILT_IN_QUESTIONS_ZH_CN
+from .settings import AppSettings, settings
 from .tools import SELECTED_SEARCH_ENGINE, SearchEngine
-
-# Load environment variables
-load_dotenv()
 
 # Team configuration
 TEAM_MEMBER_CONFIGRATIONS = {
@@ -40,13 +35,15 @@ TEAM_MEMBER_CONFIGRATIONS = {
 
 TEAM_MEMBERS = list(TEAM_MEMBER_CONFIGRATIONS.keys())
 
-__all__ = [
+__all__ = (
     # Other configurations
     "BUILT_IN_QUESTIONS",
     "BUILT_IN_QUESTIONS_ZH_CN",
     "SELECTED_SEARCH_ENGINE",
     "TEAM_MEMBERS",
     "TEAM_MEMBER_CONFIGRATIONS",
+    # Settings
+    "AppSettings",
     "SearchEngine",
-    "load_yaml_config",
-]
+    "settings",
+)

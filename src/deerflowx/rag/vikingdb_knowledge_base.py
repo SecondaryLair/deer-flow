@@ -148,7 +148,7 @@ class VikingDBKnowledgeBaseProvider(Retriever):
                     continue
 
                 if doc_id not in all_documents:
-                    all_documents[doc_id] = Document(id=doc_id, title=doc_info.get("doc_name"), chunks=[])
+                    all_documents[doc_id] = Document(doc_id=doc_id, title=doc_info.get("doc_name"), chunks=[])
 
                 chunk = Chunk(content=item.get("content", ""), similarity=item.get("score", 0.0))
                 all_documents[doc_id].chunks.append(chunk)
