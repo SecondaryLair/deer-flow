@@ -33,11 +33,34 @@ class EnhancedTavilySearchAPIWrapper(OriginalTavilySearchAPIWrapper):
     def raw_results(
         self,
         query: str,
-        params: SearchParams | None = None,
+        max_results: int | None = 5,
+        search_depth: str | None = "advanced",
+        include_domains: list[str] | None = None,
+        exclude_domains: list[str] | None = None,
+        include_answer: bool | None = False,
+        include_raw_content: bool | None = False,
+        include_images: bool | None = False,
+        include_image_descriptions: bool | None = False,
     ) -> dict:
-        if params is None:
-            params = SearchParams()
+        # Convert parameters to SearchParams for internal use
+        params = SearchParams(
+            max_results=max_results,
+            search_depth=search_depth,
+            include_domains=include_domains,
+            exclude_domains=exclude_domains,
+            include_answer=include_answer,
+            include_raw_content=include_raw_content,
+            include_images=include_images,
+            include_image_descriptions=include_image_descriptions,
+        )
 
+        return self._raw_results_internal(query, params)
+
+    def _raw_results_internal(
+        self,
+        query: str,
+        params: SearchParams,
+    ) -> dict:
         exclude_domains = params.exclude_domains or []
         include_domains = params.include_domains or []
 
@@ -71,6 +94,14 @@ class EnhancedTavilySearchAPIWrapper(OriginalTavilySearchAPIWrapper):
         if params is None:
             params = SearchParams()
 
+        return await self._raw_results_async_internal(query, params)
+
+    async def _raw_results_async_internal(
+        self,
+        query: str,
+        params: SearchParams,
+    ) -> dict:
+        """Get results from the Tavily Search API asynchronously."""
         exclude_domains = params.exclude_domains or []
         include_domains = params.include_domains or []
 

@@ -43,15 +43,12 @@ class TestEnhancedTavilySearchAPIWrapper:
 
     @patch("deerflowx.tools.tavily_search.tavily_search_api_wrapper.requests.post")
     def test_raw_results_success(self, mock_post, wrapper, mock_response_data):
-        from deerflowx.tools.tavily_search.tavily_search_api_wrapper import SearchParams
-
         mock_response = Mock()
         mock_response.json.return_value = mock_response_data
         mock_response.raise_for_status.return_value = None
         mock_post.return_value = mock_response
 
-        params = SearchParams(max_results=10)
-        result = wrapper.raw_results("test query", params)
+        result = wrapper.raw_results("test query", max_results=10)
 
         assert result == mock_response_data
         mock_post.assert_called_once()
@@ -62,14 +59,13 @@ class TestEnhancedTavilySearchAPIWrapper:
 
     @patch("deerflowx.tools.tavily_search.tavily_search_api_wrapper.requests.post")
     def test_raw_results_with_all_parameters(self, mock_post, wrapper, mock_response_data):
-        from deerflowx.tools.tavily_search.tavily_search_api_wrapper import SearchParams
-
         mock_response = Mock()
         mock_response.json.return_value = mock_response_data
         mock_response.raise_for_status.return_value = None
         mock_post.return_value = mock_response
 
-        params = SearchParams(
+        result = wrapper.raw_results(
+            "test query",
             max_results=3,
             search_depth="basic",
             include_domains=["example.com"],
@@ -79,7 +75,6 @@ class TestEnhancedTavilySearchAPIWrapper:
             include_images=True,
             include_image_descriptions=True,
         )
-        result = wrapper.raw_results("test query", params)
 
         assert result == mock_response_data
         call_args = mock_post.call_args
@@ -96,7 +91,7 @@ class TestEnhancedTavilySearchAPIWrapper:
         mock_post.return_value = mock_response
 
         with pytest.raises(requests.HTTPError):
-            wrapper.raw_results("test query")  # This will use default SearchParams
+            wrapper.raw_results("test query")  # This will use default parameters
 
     @pytest.mark.asyncio
     async def test_raw_results_async_success(self, wrapper, mock_response_data):

@@ -80,7 +80,7 @@ def test_create_llm_instance_vision(mock_settings):
 def test_create_llm_instance_invalid_type(mock_settings):
     """Test creating LLM with invalid type raises error."""
     with pytest.raises(ValueError, match="Unknown LLM type"):
-        llm._create_llm_instance("unknown")
+        llm._create_llm_instance("unknown")  # type: ignore
 
 
 def test_create_llm_instance_no_api_key(mock_settings):

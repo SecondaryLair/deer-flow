@@ -128,17 +128,19 @@ class TavilySearchResultsWithImages(TavilySearchResults):  # type: ignore[overri
     ) -> tuple[list[dict[str, str]] | str, dict]:
         """Use the tool asynchronously."""
         try:
-            raw_results = await self.api_wrapper.raw_results_async(
-                query,
-                self.max_results,
-                self.search_depth,
-                self.include_domains,
-                self.exclude_domains,
-                self.include_answer,
-                self.include_raw_content,
-                self.include_images,
-                self.include_image_descriptions,
+            from deerflowx.tools.tavily_search.tavily_search_api_wrapper import SearchParams
+
+            params = SearchParams(
+                max_results=self.max_results,
+                search_depth=self.search_depth,
+                include_domains=self.include_domains,
+                exclude_domains=self.exclude_domains,
+                include_answer=self.include_answer,
+                include_raw_content=self.include_raw_content,
+                include_images=self.include_images,
+                include_image_descriptions=self.include_image_descriptions,
             )
+            raw_results = await self.api_wrapper.raw_results_async(query, params)
         except (ValueError, TypeError, ConnectionError, TimeoutError) as e:
             return repr(e), {}
         cleaned_results = self.api_wrapper.clean_results_with_images(raw_results)
