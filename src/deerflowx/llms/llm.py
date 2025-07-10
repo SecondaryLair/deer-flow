@@ -2,8 +2,6 @@
 # SPDX-License-Identifier: MIT
 """LLM management and configuration utilities."""
 
-from __future__ import annotations
-
 from typing import Any, get_args
 
 import httpx
@@ -111,5 +109,5 @@ def get_configured_llm_models() -> dict[str, list[str]]:
 
 def clear_llm_cache() -> None:
     """Clear the LLM cache. Useful for testing or when configuration changes."""
-    global _llm_cache
+    global _llm_cache  # noqa: PLW0602
     _llm_cache.clear()

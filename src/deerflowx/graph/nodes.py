@@ -10,6 +10,7 @@ from langchain_core.messages import AIMessage, HumanMessage
 from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import tool
 from langchain_mcp_adapters.client import MultiServerMCPClient
+from langgraph.graph.graph import CompiledGraph
 from langgraph.types import Command, interrupt
 
 from deerflowx.agents import create_agent
@@ -292,7 +293,7 @@ def research_team_node(_state: State) -> dict[str, Any]:
     return {}
 
 
-async def _execute_agent_step(state: State, agent: any, agent_name: str) -> Command[Literal["research_team"]]:
+async def _execute_agent_step(state: State, agent: CompiledGraph, agent_name: str) -> Command[Literal["research_team"]]:  # noqa: C901
     """Helper function to execute a step using the specified agent."""
     current_plan = state.get("current_plan")
     observations = state.get("observations", [])

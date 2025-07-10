@@ -83,7 +83,7 @@ async def chat_stream(request: ChatRequest) -> StreamingResponse:
     )
 
 
-async def _astream_workflow_generator(  # noqa: PLR0913
+async def _astream_workflow_generator(  # noqa: C901, PLR0913
     messages: list[dict],
     thread_id: str,
     resources: list[Resource],

@@ -2,8 +2,6 @@
 # SPDX-License-Identifier: MIT
 """Web search tools and utilities for different search engines."""
 
-from __future__ import annotations
-
 import logging
 import os
 

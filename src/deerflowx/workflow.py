@@ -2,8 +2,6 @@
 # SPDX-License-Identifier: MIT
 """Workflow module for running agent workflows asynchronously."""
 
-from __future__ import annotations
-
 import logging
 
 from langchain_core.runnables import RunnableConfig
@@ -58,10 +56,18 @@ async def run_agent_workflow_async(
 
     logger.info(f"Starting async workflow with user input: {user_input}")
     initial_state = {
-        # Runtime Variables
         "messages": [{"role": "user", "content": user_input}],
+        # Runtime Variables
         "auto_accepted_plan": True,
         "enable_background_investigation": enable_background_investigation,
+        "locale": "en-US",
+        "research_topic": "",
+        "observations": [],
+        "resources": [],
+        "plan_iterations": 0,
+        "current_plan": None,
+        "final_report": "",
+        "background_investigation_results": None,
     }
     config: RunnableConfig = {
         "configurable": {

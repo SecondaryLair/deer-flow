@@ -1,6 +1,7 @@
 # Copyright (c) 2025 Bytedance Ltd. and/or its affiliates
 # SPDX-License-Identifier: MIT
-
+#
+# ruff: noqa: FBT001, FBT002
 """Entry point script for the DeerFlow project."""
 
 import argparse
@@ -41,10 +42,10 @@ def ask(
 
 
 def main(
-    debug: bool = False,  # noqa: FBT001, FBT002
+    debug: bool = False,
     max_plan_iterations: int = 1,
     max_step_num: int = 3,
-    enable_background_investigation: bool = True,  # noqa: FBT001, FBT002
+    enable_background_investigation: bool = True,
 ) -> None:
     """Interactive mode with built-in questions.
 

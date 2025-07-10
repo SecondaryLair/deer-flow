@@ -80,7 +80,7 @@ class VikingDBKnowledgeBaseProvider(Retriever):
         SignerV4.sign(r, credentials)
         return r
 
-    def query_relevant_documents(self, query: str, resources: list[Resource] | None = None) -> list[Document]:
+    def query_relevant_documents(self, query: str, resources: list[Resource] | None = None) -> list[Document]:  # noqa: C901
         """Query relevant documents from the knowledge base."""
         if resources is None:
             resources = []

@@ -11,6 +11,7 @@ from pydantic import Field
 
 from deerflowx.tools.tavily_search.tavily_search_api_wrapper import (
     EnhancedTavilySearchAPIWrapper,
+    SearchParams,
 )
 
 
@@ -128,8 +129,6 @@ class TavilySearchResultsWithImages(TavilySearchResults):  # type: ignore[overri
     ) -> tuple[list[dict[str, str]] | str, dict]:
         """Use the tool asynchronously."""
         try:
-            from deerflowx.tools.tavily_search.tavily_search_api_wrapper import SearchParams
-
             params = SearchParams(
                 max_results=self.max_results,
                 search_depth=self.search_depth,

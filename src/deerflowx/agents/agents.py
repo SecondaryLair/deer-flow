@@ -2,8 +2,6 @@
 # SPDX-License-Identifier: MIT
 """Agent creation utilities for building reactive agents."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from typing import Any
 

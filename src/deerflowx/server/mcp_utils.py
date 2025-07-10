@@ -2,10 +2,11 @@
 # SPDX-License-Identifier: MIT
 """MCP (Model Context Protocol) utility functions and client management."""
 
+import contextlib
 import logging
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import Any, AsyncContextManager
+from typing import Any
 
 from fastapi import HTTPException
 from mcp import ClientSession, StdioServerParameters
@@ -29,7 +30,7 @@ logger = logging.getLogger(__name__)
 
 
 async def _get_tools_from_client_session(
-    client_context_manager: AsyncContextManager[tuple[Any, Any]],
+    client_context_manager: contextlib.AbstractAsyncContextManager[tuple[Any, Any]],
     timeout_seconds: int = 10,
 ) -> list:
     """Helper function to get tools from a client session.
@@ -74,11 +75,11 @@ async def load_mcp_tools(
     try:
         if config.server_type == "stdio":
             if not config.command:
-                raise HTTPException(status_code=400, detail="Command is required for stdio type")
+                raise HTTPException(status_code=400, detail="Command is required for stdio type")  # noqa: TRY301
 
             server_params = StdioServerParameters(
                 command=config.command,  # Executable
-                args=config.args,  # Optional command line arguments
+                args=config.args or [],  # Optional command line arguments
                 env=config.env,  # Optional environment variables
             )
 
@@ -86,11 +87,11 @@ async def load_mcp_tools(
 
         if config.server_type == "sse":
             if not config.url:
-                raise HTTPException(status_code=400, detail="URL is required for sse type")
+                raise HTTPException(status_code=400, detail="URL is required for sse type")  # noqa: TRY301
 
             return await _get_tools_from_client_session(sse_client(url=config.url), config.timeout_seconds)
 
-        raise HTTPException(status_code=400, detail=f"Unsupported server type: {config.server_type}")
+        raise HTTPException(status_code=400, detail=f"Unsupported server type: {config.server_type}")  # noqa: TRY301
 
     except BaseException as e:
         if not isinstance(e, HTTPException):

@@ -2,23 +2,27 @@
 # SPDX-License-Identifier: MIT
 
 
-from langgraph.graph import MessagesState
+from typing import Annotated, TypedDict
+
+from langchain_core.messages import AnyMessage
+from langgraph.graph import add_messages
 
 from deerflowx.prompts.planner_model import Plan
 from deerflowx.rag import Resource
 
 
-class State(MessagesState):
-    """State for the agent system, extends MessagesState with next field."""
+class State(TypedDict):
+    """State for the agent system"""
 
+    messages: Annotated[list[AnyMessage], add_messages]
     # Runtime Variables
-    locale: str = "en-US"
-    research_topic: str = ""
-    observations: list[str] = []
-    resources: list[Resource] = []
-    plan_iterations: int = 0
-    current_plan: Plan | str = None
-    final_report: str = ""
-    auto_accepted_plan: bool = False
-    enable_background_investigation: bool = True
-    background_investigation_results: str = None
+    auto_accepted_plan: bool
+    enable_background_investigation: bool
+    locale: str
+    research_topic: str
+    observations: list[str]
+    resources: list[Resource]
+    plan_iterations: int
+    current_plan: Plan | str
+    final_report: str
+    background_investigation_results: str

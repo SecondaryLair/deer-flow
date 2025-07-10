@@ -30,7 +30,7 @@ class SearchParams:
 
 
 class EnhancedTavilySearchAPIWrapper(OriginalTavilySearchAPIWrapper):
-    def raw_results(
+    def raw_results(  # noqa: PLR0913
         self,
         query: str,
         max_results: int | None = 5,

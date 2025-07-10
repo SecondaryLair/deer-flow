@@ -1,10 +1,15 @@
 # Copyright (c) 2025 Bytedance Ltd. and/or its affiliates
 # SPDX-License-Identifier: MIT
 
+from typing import TYPE_CHECKING, cast
+
 import pytest
 
 from deerflowx.config.settings import AppSettings, BasicModelSettings, ReasoningModelSettings, VisionModelSettings
 from deerflowx.llms import llm
+
+if TYPE_CHECKING:
+    from deerflowx.config.agents import LLMType
 
 
 class DummyChatOpenAI:
@@ -80,7 +85,7 @@ def test_create_llm_instance_vision(mock_settings):
 def test_create_llm_instance_invalid_type(mock_settings):
     """Test creating LLM with invalid type raises error."""
     with pytest.raises(ValueError, match="Unknown LLM type"):
-        llm._create_llm_instance("unknown")  # type: ignore
+        llm._create_llm_instance(cast("LLMType", "unknown"))
 
 
 def test_create_llm_instance_no_api_key(mock_settings):

@@ -65,7 +65,7 @@ if __name__ == "__main__":
         reload = True
 
     try:
-        logger.info(f"Starting DeerFlow API server on {args.host}:{args.port}")
+        logger.info("Starting DeerFlow API server on %s:%s", args.host, args.port)
         uvicorn.run(
             "deerflowx.server:app",
             host=args.host,
@@ -73,6 +73,6 @@ if __name__ == "__main__":
             reload=reload,
             log_level=args.log_level,
         )
-    except Exception as e:
-        logger.exception(f"Failed to start server: {e!s}")
+    except Exception:
+        logger.exception("Failed to start server")
         sys.exit(1)

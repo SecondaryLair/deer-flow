@@ -2,10 +2,6 @@
 # SPDX-License-Identifier: MIT
 """Application settings using pydantic-settings."""
 
-from __future__ import annotations
-
-from typing import Any
-
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -52,28 +48,9 @@ class AppSettings(BaseSettings):
     search_api: str = Field(default="tavily", alias="SEARCH_API")
     rag_provider: str | None = Field(default=None, alias="RAG_PROVIDER")
 
-    def __init__(self, **data: Any) -> None:
-        """Initialize settings."""
-        super().__init__(**data)
-        # Initialize nested model settings
-        self._basic_model = BasicModelSettings()
-        self._reasoning_model = ReasoningModelSettings()
-        self._vision_model = VisionModelSettings()
-
-    @property
-    def basic_model(self) -> BasicModelSettings:
-        """Get basic model settings."""
-        return self._basic_model
-
-    @property
-    def reasoning_model(self) -> ReasoningModelSettings:
-        """Get reasoning model settings."""
-        return self._reasoning_model
-
-    @property
-    def vision_model(self) -> VisionModelSettings:
-        """Get vision model settings."""
-        return self._vision_model
+    basic_model = BasicModelSettings()
+    reasoning_model = ReasoningModelSettings()
+    vision_model = VisionModelSettings()
 
 
 # Global settings instance

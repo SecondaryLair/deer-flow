@@ -19,8 +19,13 @@ langgraph-dev:
 	uv run langgraph dev --allow-blocking
 
 lint:
-	uv run ruff format
 	uv run ruff check --fix
+
+format:
+	uv run ruff format
+
+lint-format: lint format
+    @echo "Done"
 
 coverage:
 	uv run pytest --cov=src tests/ --cov-report=term-missing --cov-report=xml
