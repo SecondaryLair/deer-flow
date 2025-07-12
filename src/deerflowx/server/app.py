@@ -12,6 +12,8 @@ from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from langchain_core.messages import AIMessageChunk, BaseMessage, ToolMessage
+from langchain_core.runnables import RunnableConfig
+from langfuse import Langfuse
 from langgraph.types import Command
 
 from deerflowx.config.report_style import ReportStyle
@@ -35,6 +37,11 @@ from deerflowx.server.rag_request import (
     RAGConfigResponse,
     RAGResourceRequest,
     RAGResourcesResponse,
+)
+from deerflowx.utils.langfuse_utils import (
+    create_langfuse_callback_handler,
+    get_langfuse_client,
+    is_langfuse_enabled,
 )
 
 logger = logging.getLogger(__name__)
@@ -64,8 +71,50 @@ async def chat_stream(request: ChatRequest) -> StreamingResponse:
     thread_id = request.thread_id
     if thread_id == DEFAULT_CHAT_REQUEST_THREAD_ID_VALUE:
         thread_id = str(uuid4())
+
+    # Create Langfuse trace if enabled
+    langfuse_client = get_langfuse_client() if is_langfuse_enabled() else None
+
     return StreamingResponse(
-        _astream_workflow_generator(
+        _execute_workflow_with_langfuse(
+            request,
+            thread_id,
+            langfuse_client,
+        ),
+        media_type="text/event-stream",
+    )
+
+
+async def _execute_workflow(
+    request: ChatRequest,
+    thread_id: str,
+) -> AsyncGenerator[str, None]:
+    async for event in _astream_workflow_generator(
+        request.model_dump()["messages"],
+        thread_id,
+        request.resources,
+        request.max_plan_iterations,
+        request.max_step_num,
+        request.max_search_results,
+        request.auto_accepted_plan,
+        request.interrupt_feedback or "",
+        request.mcp_settings or {},
+        request.enable_background_investigation,
+        request.report_style,
+        request.enable_deep_thinking,
+    ):
+        yield event
+
+
+async def _execute_workflow_with_langfuse(
+    request: ChatRequest,
+    thread_id: str,
+    langfuse_client: Langfuse | None = None,
+) -> AsyncGenerator[str, None]:
+    """Execute workflow with Langfuse tracing if enabled."""
+
+    async def _() -> AsyncGenerator[str, None]:
+        async for event in _astream_workflow_generator(
             request.model_dump()["messages"],
             thread_id,
             request.resources,
@@ -73,17 +122,39 @@ async def chat_stream(request: ChatRequest) -> StreamingResponse:
             request.max_step_num,
             request.max_search_results,
             request.auto_accepted_plan,
-            request.interrupt_feedback,
-            request.mcp_settings,
+            request.interrupt_feedback or "",
+            request.mcp_settings or {},
             request.enable_background_investigation,
             request.report_style,
             request.enable_deep_thinking,
-        ),
-        media_type="text/event-stream",
-    )
+        ):
+            yield event
+
+    if langfuse_client:
+        with langfuse_client.start_as_current_span(name=f"main-{thread_id}") as span:
+            span.update_trace(
+                input={
+                    "messages": request.model_dump()["messages"],
+                    "enable_deep_thinking": request.enable_deep_thinking,
+                    "report_style": request.report_style.value,
+                    "enable_background_investigation": request.enable_background_investigation,
+                },
+                session_id=thread_id,
+                user_id="deerflow-user",
+                tags=["research", "langgraph", "deepresearch"],
+            )
+
+            async for event in _():
+                yield event
+
+            span.update_trace(output={"status": "completed"})
+
+    else:
+        async for event in _():
+            yield event
 
 
-async def _astream_workflow_generator(  # noqa: C901, PLR0913
+async def _astream_workflow_generator(  # noqa: C901, PLR0912, PLR0913
     messages: list[dict],
     thread_id: str,
     resources: list[Resource],
@@ -123,9 +194,17 @@ async def _astream_workflow_generator(  # noqa: C901, PLR0913
         "report_style": report_style.value,
         "enable_deep_thinking": enable_deep_thinking,
     }
+
+    # Create Langfuse CallbackHandler if enabled
+    langfuse_handler = create_langfuse_callback_handler()
+
+    config: RunnableConfig = {"configurable": graph_stream_config}
+    if langfuse_handler:
+        config["callbacks"] = [langfuse_handler]
+
     async for agent, _, event_data in graph.astream(
         input_,
-        config={"configurable": graph_stream_config},
+        config=config,
         stream_mode=["messages", "updates"],
         subgraphs=True,
     ):
@@ -200,7 +279,7 @@ async def generate_prose(request: GenerateProseRequest) -> StreamingResponse:
             subgraphs=True,
         )
         return StreamingResponse(
-            (f"data: {event[0].content}\n\n" async for _, event in events),
+            (f"data: {getattr(event[0], 'content', str(event[0]))}\n\n" async for _, event in events),
             media_type="text/event-stream",
         )
     except BaseException as e:
