@@ -2,9 +2,9 @@
 # SPDX-License-Identifier: MIT
 """Agent creation utilities for building reactive agents."""
 
-from collections.abc import Callable
 from typing import Any
 
+from langgraph.graph.graph import CompiledGraph
 from langgraph.prebuilt import create_react_agent
 
 from deerflowx.config.agents import AGENT_LLM_MAP
@@ -13,7 +13,12 @@ from deerflowx.prompts import apply_prompt_template
 
 
 # Create agents using configured LLM types
-def create_agent(agent_name: str, agent_type: str, tools: list[Any], prompt_template: str) -> Callable[..., Any]:
+def create_agent(
+    agent_name: str,
+    agent_type: str,
+    tools: list[Any],
+    prompt_template: str,
+) -> CompiledGraph:
     """Factory function to create agents with consistent configuration."""
     return create_react_agent(
         name=agent_name,

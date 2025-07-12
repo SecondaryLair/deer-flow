@@ -2,9 +2,13 @@
 # SPDX-License-Identifier: MIT
 """Configuration management and loading utilities."""
 
+import logging
+
 from .questions import BUILT_IN_QUESTIONS, BUILT_IN_QUESTIONS_ZH_CN
 from .settings import AppSettings, settings
 from .tools import SELECTED_SEARCH_ENGINE, SearchEngine
+
+logger = logging.getLogger(__name__)
 
 # Team configuration
 TEAM_MEMBER_CONFIGRATIONS = {
@@ -34,6 +38,7 @@ TEAM_MEMBER_CONFIGRATIONS = {
 }
 
 TEAM_MEMBERS = list(TEAM_MEMBER_CONFIGRATIONS.keys())
+
 
 __all__ = (
     # Other configurations

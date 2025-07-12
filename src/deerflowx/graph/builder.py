@@ -23,7 +23,7 @@ from .types import State
 
 def continue_to_running_research_team(state: State) -> str:
     current_plan = state.get("current_plan")
-    if not current_plan or not current_plan.steps:
+    if not current_plan or isinstance(current_plan, str):
         return "planner"
     if all(step.execution_res for step in current_plan.steps):
         return "planner"

@@ -110,4 +110,4 @@ async def run_agent_workflow_async(
 
 
 if __name__ == "__main__":
-    pass
+    print(graph.get_graph(xray=True).draw_mermaid())  # noqa: T201

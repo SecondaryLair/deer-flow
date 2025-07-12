@@ -18,11 +18,11 @@ from deerflowx.tools.tavily_search.tavily_search_results_with_images import (
 
 logger = logging.getLogger(__name__)
 
-# Create logged versions of the search tools
-LoggedTavilySearch = create_logged_tool(TavilySearchResultsWithImages)
-LoggedDuckDuckGoSearch = create_logged_tool(DuckDuckGoSearchResults)
-LoggedBraveSearch = create_logged_tool(BraveSearch)
-LoggedArxivSearch = create_logged_tool(ArxivQueryRun)
+# Create logged versions of the search tools with proper type annotations
+LoggedTavilySearch: type[TavilySearchResultsWithImages] = create_logged_tool(TavilySearchResultsWithImages)
+LoggedDuckDuckGoSearch: type[DuckDuckGoSearchResults] = create_logged_tool(DuckDuckGoSearchResults)
+LoggedBraveSearch: type[BraveSearch] = create_logged_tool(BraveSearch)
+LoggedArxivSearch: type[ArxivQueryRun] = create_logged_tool(ArxivQueryRun)
 
 
 # Get the selected search tool

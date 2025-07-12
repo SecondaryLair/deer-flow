@@ -20,8 +20,8 @@ if [ $FORMAT_RESULT -ne 0 ]; then
     exit 1
 fi
 
-# If any files were reformatted, add them back to staging
-git diff --name-only | xargs -I {} git add "{}"
+# # If any files were reformatted, add them back to staging
+# git diff --name-only | xargs -I {} git add "{}"
 
 echo "✅ Pre-commit checks passed!"
 exit 0
