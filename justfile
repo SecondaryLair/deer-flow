@@ -2,10 +2,10 @@ default:
     @just -l
 
 dev-run-web:
-    uv run server.py --reload
+    cd web && pnpm dev
 
 dev-run-server:
-    cd web && pnpm dev
+    uv run server.py --reload
 
 dev:
     @overmind s
