@@ -7,8 +7,8 @@ import pytest
 from langchain.schema import HumanMessage, SystemMessage
 
 from deerflowx.config.report_style import ReportStyle
-from deerflowx.prompt_enhancer.graph.enhancer_node import prompt_enhancer_node
-from deerflowx.prompt_enhancer.graph.state import PromptEnhancerState
+from deerflowx.graphs.prompt_enhancer.graph.enhancer_node import prompt_enhancer_node
+from deerflowx.graphs.prompt_enhancer.graph.state import PromptEnhancerState
 
 
 @pytest.fixture
@@ -32,8 +32,8 @@ class TestPromptEnhancerNode:
     """Test cases for prompt_enhancer_node function."""
 
     @pytest.mark.asyncio
-    @patch("deerflowx.prompt_enhancer.graph.enhancer_node.get_llm_by_type")
-    @patch("deerflowx.prompt_enhancer.graph.enhancer_node.AGENT_LLM_MAP", {"prompt_enhancer": "basic"})
+    @patch("deerflowx.graphs.prompt_enhancer.graph.enhancer_node.get_llm_by_type")
+    @patch("deerflowx.graphs.prompt_enhancer.graph.enhancer_node.AGENT_LLM_MAP", {"prompt_enhancer": "basic"})
     async def test_basic_prompt_enhancement(self, mock_get_llm, mock_llm, mock_messages):
         """Test basic prompt enhancement without context or report style."""
         mock_get_llm.return_value = mock_llm
@@ -50,9 +50,9 @@ class TestPromptEnhancerNode:
         assert result == {"enhanced_prompt": "Enhanced test prompt"}
 
     @pytest.mark.asyncio
-    @patch("deerflowx.prompt_enhancer.graph.enhancer_node.get_llm_by_type")
+    @patch("deerflowx.graphs.prompt_enhancer.graph.enhancer_node.get_llm_by_type")
     @patch(
-        "deerflowx.prompt_enhancer.graph.enhancer_node.AGENT_LLM_MAP",
+        "deerflowx.graphs.prompt_enhancer.graph.enhancer_node.AGENT_LLM_MAP",
         {"prompt_enhancer": "basic"},
     )
     async def test_prompt_enhancement_with_report_style(self, mock_get_llm, mock_llm):
@@ -72,9 +72,9 @@ class TestPromptEnhancerNode:
         assert result == {"enhanced_prompt": "Enhanced test prompt"}
 
     @pytest.mark.asyncio
-    @patch("deerflowx.prompt_enhancer.graph.enhancer_node.get_llm_by_type")
+    @patch("deerflowx.graphs.prompt_enhancer.graph.enhancer_node.get_llm_by_type")
     @patch(
-        "deerflowx.prompt_enhancer.graph.enhancer_node.AGENT_LLM_MAP",
+        "deerflowx.graphs.prompt_enhancer.graph.enhancer_node.AGENT_LLM_MAP",
         {"prompt_enhancer": "basic"},
     )
     async def test_prompt_enhancement_with_context(self, mock_get_llm, mock_llm):
@@ -99,9 +99,9 @@ class TestPromptEnhancerNode:
         assert result == {"enhanced_prompt": "Enhanced test prompt"}
 
     @pytest.mark.asyncio
-    @patch("deerflowx.prompt_enhancer.graph.enhancer_node.get_llm_by_type")
+    @patch("deerflowx.graphs.prompt_enhancer.graph.enhancer_node.get_llm_by_type")
     @patch(
-        "deerflowx.prompt_enhancer.graph.enhancer_node.AGENT_LLM_MAP",
+        "deerflowx.graphs.prompt_enhancer.graph.enhancer_node.AGENT_LLM_MAP",
         {"prompt_enhancer": "basic"},
     )
     async def test_error_handling(self, mock_get_llm, mock_llm):
@@ -118,9 +118,9 @@ class TestPromptEnhancerNode:
         assert result == {"enhanced_prompt": "Test prompt"}
 
     @pytest.mark.asyncio
-    @patch("deerflowx.prompt_enhancer.graph.enhancer_node.get_llm_by_type")
+    @patch("deerflowx.graphs.prompt_enhancer.graph.enhancer_node.get_llm_by_type")
     @patch(
-        "deerflowx.prompt_enhancer.graph.enhancer_node.AGENT_LLM_MAP",
+        "deerflowx.graphs.prompt_enhancer.graph.enhancer_node.AGENT_LLM_MAP",
         {"prompt_enhancer": "basic"},
     )
     async def test_template_error_handling(self, mock_get_llm, mock_llm):
@@ -137,9 +137,9 @@ class TestPromptEnhancerNode:
         assert result == {"enhanced_prompt": "Test prompt"}
 
     @pytest.mark.asyncio
-    @patch("deerflowx.prompt_enhancer.graph.enhancer_node.get_llm_by_type")
+    @patch("deerflowx.graphs.prompt_enhancer.graph.enhancer_node.get_llm_by_type")
     @patch(
-        "deerflowx.prompt_enhancer.graph.enhancer_node.AGENT_LLM_MAP",
+        "deerflowx.graphs.prompt_enhancer.graph.enhancer_node.AGENT_LLM_MAP",
         {"prompt_enhancer": "basic"},
     )
     async def test_prefix_removal(self, mock_get_llm, mock_llm):
@@ -165,9 +165,9 @@ class TestPromptEnhancerNode:
             assert result == {"enhanced_prompt": "This is the enhanced prompt"}
 
     @pytest.mark.asyncio
-    @patch("deerflowx.prompt_enhancer.graph.enhancer_node.get_llm_by_type")
+    @patch("deerflowx.graphs.prompt_enhancer.graph.enhancer_node.get_llm_by_type")
     @patch(
-        "deerflowx.prompt_enhancer.graph.enhancer_node.AGENT_LLM_MAP",
+        "deerflowx.graphs.prompt_enhancer.graph.enhancer_node.AGENT_LLM_MAP",
         {"prompt_enhancer": "basic"},
     )
     async def test_whitespace_handling(self, mock_get_llm, mock_llm):

@@ -3,7 +3,7 @@
 
 import pytest
 
-from deerflowx.tools.tavily_search.tavily_search_results_with_images import (
+from deerflowx.libs.tavily_search.tavily_search_results_with_images import (
     TavilySearchResultsWithImages,
 )
 

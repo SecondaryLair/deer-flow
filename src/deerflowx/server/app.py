@@ -19,12 +19,11 @@ from langgraph.types import Command
 
 from deerflowx.config.report_style import ReportStyle
 from deerflowx.config.tools import SELECTED_RAG_PROVIDER
-from deerflowx.graph.builder import build_graph_with_memory
-from deerflowx.llms.llm import get_configured_llm_models
-from deerflowx.prompt_enhancer.graph.builder import build_graph as build_prompt_enhancer_graph
-from deerflowx.prose.graph.builder import build_graph as build_prose_graph
-from deerflowx.rag.builder import build_retriever
-from deerflowx.rag.retriever import Resource
+from deerflowx.graphs.prompt_enhancer.graph.builder import build_graph as build_prompt_enhancer_graph
+from deerflowx.graphs.prose.graph.builder import build_graph as build_prose_graph
+from deerflowx.graphs.research.graph.builder import build_graph_with_memory
+from deerflowx.libs.rag.builder import build_retriever
+from deerflowx.libs.rag.retriever import Resource
 from deerflowx.server.chat_request import (
     DEFAULT_CHAT_REQUEST_THREAD_ID_VALUE,
     ChatRequest,
@@ -44,6 +43,7 @@ from deerflowx.utils.langfuse_utils import (
     get_langfuse_client,
     is_langfuse_enabled,
 )
+from deerflowx.utils.llms.llm import get_configured_llm_models
 
 logger = logging.getLogger(__name__)
 

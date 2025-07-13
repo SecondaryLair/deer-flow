@@ -6,7 +6,7 @@ import logging
 
 from langchain_core.runnables import RunnableConfig
 
-from deerflowx.graph import build_graph
+from deerflowx.graphs.research.graph import build_graph
 
 # Configure logging
 logging.basicConfig(

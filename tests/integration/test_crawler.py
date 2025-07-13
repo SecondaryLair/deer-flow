@@ -1,7 +1,7 @@
 # Copyright (c) 2025 Bytedance Ltd. and/or its affiliates
 # SPDX-License-Identifier: MIT
 
-from deerflowx.crawler import Crawler
+from deerflowx.libs.crawler import Crawler
 
 
 def test_crawler_initialization():

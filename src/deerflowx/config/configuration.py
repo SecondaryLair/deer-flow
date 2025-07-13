@@ -11,7 +11,7 @@ from typing import Any
 from langchain_core.runnables import RunnableConfig
 
 from deerflowx.config.report_style import ReportStyle
-from deerflowx.rag.retriever import Resource
+from deerflowx.libs.rag.retriever import Resource
 
 
 @dataclass(kw_only=True)

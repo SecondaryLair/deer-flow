@@ -11,10 +11,10 @@ from langchain_community.utilities import ArxivAPIWrapper, BraveSearchWrapper
 from langchain_core.tools import BaseTool
 
 from deerflowx.config import SELECTED_SEARCH_ENGINE, SearchEngine
-from deerflowx.tools.decorators import create_logged_tool
-from deerflowx.tools.tavily_search.tavily_search_results_with_images import (
+from deerflowx.libs.tavily_search.tavily_search_results_with_images import (
     TavilySearchResultsWithImages,
 )
+from deerflowx.tools.decorators import create_logged_tool
 
 logger = logging.getLogger(__name__)
 

@@ -11,9 +11,9 @@ from deerflowx.config.configuration import Configuration
 # Patch Resource for import
 mock_resource = type("Resource", (), {})
 
-# Patch deerflowx.rag.retriever.Resource for import
+# Patch deerflowx.libs.rag.retriever.Resource for import
 
-module_name = "deerflowx.rag.retriever"
+module_name = "deerflowx.libs.rag.retriever"
 if module_name not in sys.modules:
     retriever_mod = types.ModuleType(module_name)
     retriever_mod.Resource = mock_resource

@@ -7,7 +7,7 @@ from typing import Annotated
 
 from langchain_core.tools import tool
 
-from deerflowx.crawler import Crawler
+from deerflowx.libs.crawler import Crawler
 
 from .decorators import log_io
 

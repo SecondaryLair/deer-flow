@@ -8,7 +8,7 @@ from fastapi import HTTPException
 from pydantic import ValidationError
 
 from deerflowx.config.report_style import ReportStyle
-from deerflowx.rag.retriever import Resource
+from deerflowx.libs.rag.retriever import Resource
 from deerflowx.server import mcp_utils  # Assuming mcp_utils is the module to test
 from deerflowx.server.chat_request import (
     ChatMessage,

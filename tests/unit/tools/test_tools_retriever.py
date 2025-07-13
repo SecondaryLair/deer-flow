@@ -9,7 +9,7 @@ from langchain_core.callbacks import (
     CallbackManagerForToolRun,
 )
 
-from deerflowx.rag import Chunk, Document, Resource, Retriever
+from deerflowx.libs.rag import Chunk, Document, Resource, Retriever
 from deerflowx.tools.retriever import RetrieverInput, RetrieverTool, get_retriever_tool
 
 

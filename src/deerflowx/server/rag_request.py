@@ -4,7 +4,7 @@
 
 from pydantic import BaseModel, Field
 
-from deerflowx.rag.retriever import Resource
+from deerflowx.libs.rag.retriever import Resource
 
 
 class RAGConfigResponse(BaseModel):

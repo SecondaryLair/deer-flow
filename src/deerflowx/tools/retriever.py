@@ -11,7 +11,7 @@ from langchain_core.tools import BaseTool
 from pydantic import BaseModel, Field
 
 from deerflowx.config.tools import SELECTED_RAG_PROVIDER
-from deerflowx.rag import Document, Resource, Retriever, build_retriever
+from deerflowx.libs.rag import Document, Resource, Retriever, build_retriever
 
 logger = logging.getLogger(__name__)
 

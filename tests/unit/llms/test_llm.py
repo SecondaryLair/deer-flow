@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, cast
 import pytest
 
 from deerflowx.config.settings import AppSettings, BasicModelSettings, ReasoningModelSettings, VisionModelSettings
-from deerflowx.llms import llm
+from deerflowx.utils.llms import llm
 
 if TYPE_CHECKING:
     from deerflowx.config.agents import LLMType
@@ -48,7 +48,7 @@ def mock_settings(monkeypatch):
         api_key="test_vision_key", base_url="http://test-vision", model="test-vision-model"
     )
 
-    monkeypatch.setattr("deerflowx.llms.llm.settings", test_settings)
+    monkeypatch.setattr("deerflowx.utils.llms.llm.settings", test_settings)
     return test_settings
 
 
@@ -152,8 +152,8 @@ def test_ssl_verification_disabled(mock_settings, monkeypatch):
         assert verify is False
         return mock_async_client
 
-    monkeypatch.setattr("deerflowx.llms.llm.httpx.Client", mock_httpx_client)
-    monkeypatch.setattr("deerflowx.llms.llm.httpx.AsyncClient", mock_httpx_async_client)
+    monkeypatch.setattr("deerflowx.utils.llms.llm.httpx.Client", mock_httpx_client)
+    monkeypatch.setattr("deerflowx.utils.llms.llm.httpx.AsyncClient", mock_httpx_async_client)
 
     # Just test that the function runs without error when SSL is disabled
     result = llm._create_llm_instance("basic")

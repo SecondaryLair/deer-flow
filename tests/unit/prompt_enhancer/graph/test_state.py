@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 from deerflowx.config.report_style import ReportStyle
-from deerflowx.prompt_enhancer.graph.state import PromptEnhancerState
+from deerflowx.graphs.prompt_enhancer.graph.state import PromptEnhancerState
 
 
 def test_prompt_enhancer_state_creation():

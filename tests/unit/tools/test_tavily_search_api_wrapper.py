@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 import pytest
 import requests
 
-from deerflowx.tools.tavily_search.tavily_search_api_wrapper import (
+from deerflowx.libs.tavily_search.tavily_search_api_wrapper import (
     EnhancedTavilySearchAPIWrapper,
 )
 
@@ -16,7 +16,7 @@ class TestEnhancedTavilySearchAPIWrapper:
     def wrapper(self):
         from pydantic import SecretStr
 
-        with patch("deerflowx.tools.tavily_search.tavily_search_api_wrapper.OriginalTavilySearchAPIWrapper"):
+        with patch("deerflowx.libs.tavily_search.tavily_search_api_wrapper.OriginalTavilySearchAPIWrapper"):
             wrapper = EnhancedTavilySearchAPIWrapper(tavily_api_key=SecretStr("dummy-key"))
             # The parent class is mocked, so initialization won't fail
             return wrapper
@@ -41,7 +41,7 @@ class TestEnhancedTavilySearchAPIWrapper:
             ],
         }
 
-    @patch("deerflowx.tools.tavily_search.tavily_search_api_wrapper.requests.post")
+    @patch("deerflowx.libs.tavily_search.tavily_search_api_wrapper.requests.post")
     def test_raw_results_success(self, mock_post, wrapper, mock_response_data):
         mock_response = Mock()
         mock_response.json.return_value = mock_response_data
@@ -57,7 +57,7 @@ class TestEnhancedTavilySearchAPIWrapper:
         assert call_args.kwargs["json"]["query"] == "test query"
         assert call_args.kwargs["json"]["max_results"] == 10
 
-    @patch("deerflowx.tools.tavily_search.tavily_search_api_wrapper.requests.post")
+    @patch("deerflowx.libs.tavily_search.tavily_search_api_wrapper.requests.post")
     def test_raw_results_with_all_parameters(self, mock_post, wrapper, mock_response_data):
         mock_response = Mock()
         mock_response.json.return_value = mock_response_data
@@ -84,7 +84,7 @@ class TestEnhancedTavilySearchAPIWrapper:
         assert request_params["include_answer"] is True
         assert request_params["include_raw_content"] is True
 
-    @patch("deerflowx.tools.tavily_search.tavily_search_api_wrapper.requests.post")
+    @patch("deerflowx.libs.tavily_search.tavily_search_api_wrapper.requests.post")
     def test_raw_results_http_error(self, mock_post, wrapper):
         mock_response = Mock()
         mock_response.raise_for_status.side_effect = requests.HTTPError("API Error")
@@ -112,7 +112,7 @@ class TestEnhancedTavilySearchAPIWrapper:
         mock_session_cm.__aexit__ = AsyncMock(return_value=None)
 
         with patch(
-            "deerflowx.tools.tavily_search.tavily_search_api_wrapper.aiohttp.ClientSession",
+            "deerflowx.libs.tavily_search.tavily_search_api_wrapper.aiohttp.ClientSession",
             return_value=mock_session_cm,
         ):
             result = await wrapper.raw_results_async("test query")
@@ -138,7 +138,7 @@ class TestEnhancedTavilySearchAPIWrapper:
         mock_session_cm.__aexit__ = AsyncMock(return_value=None)
 
         with patch(
-            "deerflowx.tools.tavily_search.tavily_search_api_wrapper.aiohttp.ClientSession",
+            "deerflowx.libs.tavily_search.tavily_search_api_wrapper.aiohttp.ClientSession",
             return_value=mock_session_cm,
         ):
             with pytest.raises(Exception, match="Error 400: Bad Request"):

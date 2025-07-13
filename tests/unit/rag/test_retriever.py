@@ -3,7 +3,7 @@
 
 import pytest
 
-from deerflowx.rag.retriever import Chunk, Document, Resource, Retriever
+from deerflowx.libs.rag.retriever import Chunk, Document, Resource, Retriever
 
 
 def test_chunk_init():

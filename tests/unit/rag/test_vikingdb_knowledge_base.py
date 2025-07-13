@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from deerflowx.rag.vikingdb_knowledge_base import VikingDBKnowledgeBaseProvider, parse_uri
+from deerflowx.libs.rag.vikingdb_knowledge_base import VikingDBKnowledgeBaseProvider, parse_uri
 
 
 # Dummy classes to mock dependencies
@@ -35,9 +35,9 @@ class MockDocument:
 @pytest.fixture(autouse=True)
 def patch_imports():
     with (
-        patch("deerflowx.rag.vikingdb_knowledge_base.Resource", MockResource),
-        patch("deerflowx.rag.vikingdb_knowledge_base.Chunk", MockChunk),
-        patch("deerflowx.rag.vikingdb_knowledge_base.Document", MockDocument),
+        patch("deerflowx.libs.rag.vikingdb_knowledge_base.Resource", MockResource),
+        patch("deerflowx.libs.rag.vikingdb_knowledge_base.Chunk", MockChunk),
+        patch("deerflowx.libs.rag.vikingdb_knowledge_base.Document", MockDocument),
     ):
         yield
 
@@ -168,9 +168,9 @@ class TestVikingDBKnowledgeBaseProviderPrepareRequest:
     def test_prepare_request_basic(self, provider):
         """Test basic request preparation"""
         with (
-            patch("deerflowx.rag.vikingdb_knowledge_base.Request") as mock_request,
-            patch("deerflowx.rag.vikingdb_knowledge_base.Credentials") as mock_credentials,
-            patch("deerflowx.rag.vikingdb_knowledge_base.SignerV4.sign") as mock_sign,
+            patch("deerflowx.libs.rag.vikingdb_knowledge_base.Request") as mock_request,
+            patch("deerflowx.libs.rag.vikingdb_knowledge_base.Credentials") as mock_credentials,
+            patch("deerflowx.libs.rag.vikingdb_knowledge_base.SignerV4.sign") as mock_sign,
         ):
             mock_req_instance = MagicMock()
             mock_request.return_value = mock_req_instance
@@ -185,9 +185,9 @@ class TestVikingDBKnowledgeBaseProviderPrepareRequest:
     def test_prepare_request_with_params(self, provider):
         """Test request preparation with parameters"""
         with (
-            patch("deerflowx.rag.vikingdb_knowledge_base.Request") as mock_request,
-            patch("deerflowx.rag.vikingdb_knowledge_base.Credentials"),
-            patch("deerflowx.rag.vikingdb_knowledge_base.SignerV4.sign"),
+            patch("deerflowx.libs.rag.vikingdb_knowledge_base.Request") as mock_request,
+            patch("deerflowx.libs.rag.vikingdb_knowledge_base.Credentials"),
+            patch("deerflowx.libs.rag.vikingdb_knowledge_base.SignerV4.sign"),
         ):
             mock_req_instance = MagicMock()
             mock_request.return_value = mock_req_instance
@@ -201,9 +201,9 @@ class TestVikingDBKnowledgeBaseProviderPrepareRequest:
     def test_prepare_request_with_data(self, provider):
         """Test request preparation with data"""
         with (
-            patch("deerflowx.rag.vikingdb_knowledge_base.Request") as mock_request,
-            patch("deerflowx.rag.vikingdb_knowledge_base.Credentials"),
-            patch("deerflowx.rag.vikingdb_knowledge_base.SignerV4.sign"),
+            patch("deerflowx.libs.rag.vikingdb_knowledge_base.Request") as mock_request,
+            patch("deerflowx.libs.rag.vikingdb_knowledge_base.Credentials"),
+            patch("deerflowx.libs.rag.vikingdb_knowledge_base.SignerV4.sign"),
         ):
             mock_req_instance = MagicMock()
             mock_request.return_value = mock_req_instance
@@ -224,7 +224,7 @@ class TestVikingDBKnowledgeBaseProviderQueryRelevantDocuments:
         result = provider.query_relevant_documents("test query", [])
         assert result == []
 
-    @patch("deerflowx.rag.vikingdb_knowledge_base.requests.request")
+    @patch("deerflowx.libs.rag.vikingdb_knowledge_base.requests.request")
     def test_query_relevant_documents_success(self, mock_request, provider):
         """Test successful document query"""
         # Mock response
@@ -267,7 +267,7 @@ class TestVikingDBKnowledgeBaseProviderQueryRelevantDocuments:
             assert result[0].chunks[0].content == "Test content"
             assert result[0].chunks[0].similarity == 0.95
 
-    @patch("deerflowx.rag.vikingdb_knowledge_base.requests.request")
+    @patch("deerflowx.libs.rag.vikingdb_knowledge_base.requests.request")
     def test_query_relevant_documents_with_document_filter(self, mock_request, provider):
         """Test document query with document ID filter"""
         mock_response = MagicMock()
@@ -292,7 +292,7 @@ class TestVikingDBKnowledgeBaseProviderQueryRelevantDocuments:
             assert doc_filter["field"] == "doc_id"
             assert doc_filter["conds"] == ["doc456"]
 
-    @patch("deerflowx.rag.vikingdb_knowledge_base.requests.request")
+    @patch("deerflowx.libs.rag.vikingdb_knowledge_base.requests.request")
     def test_query_relevant_documents_api_error(self, mock_request, provider):
         """Test handling of API error response"""
         mock_response = MagicMock()
@@ -304,7 +304,7 @@ class TestVikingDBKnowledgeBaseProviderQueryRelevantDocuments:
             with pytest.raises(ValueError, match="Failed to query documents from resource: API Error"):
                 provider.query_relevant_documents("test query", resources)
 
-    @patch("deerflowx.rag.vikingdb_knowledge_base.requests.request")
+    @patch("deerflowx.libs.rag.vikingdb_knowledge_base.requests.request")
     def test_query_relevant_documents_json_decode_error(self, mock_request, provider):
         """Test handling of JSON decode error"""
         mock_response = MagicMock()
@@ -316,7 +316,7 @@ class TestVikingDBKnowledgeBaseProviderQueryRelevantDocuments:
             with pytest.raises(ValueError, match="Failed to parse JSON response"):
                 provider.query_relevant_documents("test query", resources)
 
-    @patch("deerflowx.rag.vikingdb_knowledge_base.requests.request")
+    @patch("deerflowx.libs.rag.vikingdb_knowledge_base.requests.request")
     def test_query_relevant_documents_multiple_resources(self, mock_request, provider):
         """Test querying multiple resources and merging results"""
         # Mock responses for different resources
@@ -387,7 +387,7 @@ class TestVikingDBKnowledgeBaseProviderListResources:
     def provider(self, env_vars):
         return VikingDBKnowledgeBaseProvider()
 
-    @patch("deerflowx.rag.vikingdb_knowledge_base.requests.request")
+    @patch("deerflowx.libs.rag.vikingdb_knowledge_base.requests.request")
     def test_list_resources_success(self, mock_request, provider):
         """Test successful resource listing"""
         mock_response = MagicMock()
@@ -426,7 +426,7 @@ class TestVikingDBKnowledgeBaseProviderListResources:
             assert result[1].title == "Dataset 2"
             assert result[1].description == "Description 2"
 
-    @patch("deerflowx.rag.vikingdb_knowledge_base.requests.request")
+    @patch("deerflowx.libs.rag.vikingdb_knowledge_base.requests.request")
     def test_list_resources_with_query_filter(self, mock_request, provider):
         """Test resource listing with query filter"""
         mock_response = MagicMock()
@@ -458,7 +458,7 @@ class TestVikingDBKnowledgeBaseProviderListResources:
             assert len(result) == 1
             assert result[0].title == "Test Dataset"
 
-    @patch("deerflowx.rag.vikingdb_knowledge_base.requests.request")
+    @patch("deerflowx.libs.rag.vikingdb_knowledge_base.requests.request")
     def test_list_resources_api_error(self, mock_request, provider):
         """Test handling of API error in list_resources"""
         mock_response = MagicMock()
@@ -469,7 +469,7 @@ class TestVikingDBKnowledgeBaseProviderListResources:
             with pytest.raises(Exception, match="Failed to list resources: API Error"):
                 provider.list_resources()
 
-    @patch("deerflowx.rag.vikingdb_knowledge_base.requests.request")
+    @patch("deerflowx.libs.rag.vikingdb_knowledge_base.requests.request")
     def test_list_resources_json_decode_error(self, mock_request, provider):
         """Test handling of JSON decode error in list_resources"""
         mock_response = MagicMock()
@@ -480,7 +480,7 @@ class TestVikingDBKnowledgeBaseProviderListResources:
             with pytest.raises(ValueError, match="Failed to parse JSON response"):
                 provider.list_resources()
 
-    @patch("deerflowx.rag.vikingdb_knowledge_base.requests.request")
+    @patch("deerflowx.libs.rag.vikingdb_knowledge_base.requests.request")
     def test_list_resources_empty_response(self, mock_request, provider):
         """Test handling of empty response"""
         mock_response = MagicMock()

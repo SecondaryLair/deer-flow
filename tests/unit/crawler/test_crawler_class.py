@@ -1,7 +1,7 @@
 # Copyright (c) 2025 Bytedance Ltd. and/or its affiliates
 # SPDX-License-Identifier: MIT
 
-import deerflowx.crawler as crawler_module
+import deerflowx.libs.crawler as crawler_module
 
 
 def test_crawler_sets_article_url(monkeypatch):
@@ -22,8 +22,8 @@ def test_crawler_sets_article_url(monkeypatch):
         def extract_article(self, html):
             return DummyArticle()
 
-    monkeypatch.setattr("deerflowx.crawler.crawler.JinaClient", DummyJinaClient)
-    monkeypatch.setattr("deerflowx.crawler.crawler.ReadabilityExtractor", DummyReadabilityExtractor)
+    monkeypatch.setattr("deerflowx.libs.crawler.crawler.JinaClient", DummyJinaClient)
+    monkeypatch.setattr("deerflowx.libs.crawler.crawler.ReadabilityExtractor", DummyReadabilityExtractor)
 
     crawler = crawler_module.Crawler()
     url = "http://example.com"
@@ -53,8 +53,8 @@ def test_crawler_calls_dependencies(monkeypatch):
 
             return DummyArticle()
 
-    monkeypatch.setattr("deerflowx.crawler.crawler.JinaClient", DummyJinaClient)
-    monkeypatch.setattr("deerflowx.crawler.crawler.ReadabilityExtractor", DummyReadabilityExtractor)
+    monkeypatch.setattr("deerflowx.libs.crawler.crawler.JinaClient", DummyJinaClient)
+    monkeypatch.setattr("deerflowx.libs.crawler.crawler.ReadabilityExtractor", DummyReadabilityExtractor)
 
     crawler = crawler_module.Crawler()
     url = "http://example.com"
