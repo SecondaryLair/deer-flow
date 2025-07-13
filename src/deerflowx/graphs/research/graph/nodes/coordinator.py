@@ -37,7 +37,7 @@ async def coordinator_node(
     logger.info("Coordinator talking.")
     configurable = Configuration.from_runnable_config(config)
     messages = apply_prompt_template("coordinator", state)
-    response = get_llm_by_type(AGENT_LLM_MAP["coordinator"]).bind_tools([handoff_to_planner]).invoke(messages)
+    response = await get_llm_by_type(AGENT_LLM_MAP["coordinator"]).bind_tools([handoff_to_planner]).ainvoke(messages)
     logger.debug(f"Current state messages: {state['messages']}")
 
     goto = "__end__"

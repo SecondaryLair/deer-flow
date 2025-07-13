@@ -25,13 +25,13 @@ async def background_investigation_node(state: State, config: RunnableConfig) ->
     query = state.get("research_topic")
     background_investigation_results = None
     if SearchEngine.TAVILY.value == SELECTED_SEARCH_ENGINE:
-        searched_content = LoggedTavilySearch(max_results=configurable.max_search_results).invoke(query)
+        searched_content = await LoggedTavilySearch(max_results=configurable.max_search_results).ainvoke(query)
         if isinstance(searched_content, list):
             background_investigation_results = [f"## {elem['title']}\n\n{elem['content']}" for elem in searched_content]
             return {"background_investigation_results": "\n\n".join(background_investigation_results)}
         logger.error(f"Tavily search returned malformed response: {searched_content}")
     else:
-        background_investigation_results = get_web_search_tool(configurable.max_search_results).invoke(query)
+        background_investigation_results = await get_web_search_tool(configurable.max_search_results).ainvoke(query)
     return {"background_investigation_results": json.dumps(background_investigation_results, ensure_ascii=False)}
 
 

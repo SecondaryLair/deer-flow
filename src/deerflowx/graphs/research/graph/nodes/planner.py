@@ -56,12 +56,14 @@ async def planner_node(state: State, config: RunnableConfig) -> Command[Literal[
 
     full_response = ""
     if AGENT_LLM_MAP["planner"] == "basic" and not configurable.enable_deep_thinking:
-        response = llm.invoke(messages)
+        response = await llm.ainvoke(messages)
         full_response = response.model_dump_json(indent=4, exclude_none=True)
     else:
-        response = llm.stream(messages)
-        for chunk in response:
+        # Use async streaming for better performance
+        response_stream = llm.astream(messages)
+        async for chunk in response_stream:
             full_response += chunk.content
+
     logger.debug(f"Current state messages: {state['messages']}")
     logger.info(f"Planner response: {full_response}")
 
