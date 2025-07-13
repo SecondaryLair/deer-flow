@@ -4,9 +4,8 @@
 
 import logging
 
-from langchain_core.runnables import RunnableConfig
-
-from deerflowx.graphs.research.graph import build_graph
+from deerflowx.config.report_style import ReportStyle
+from deerflowx.utils.workflow_executor import workflow_executor
 
 # Configure logging
 logging.basicConfig(
@@ -22,11 +21,8 @@ def enable_debug_logging() -> None:
 
 logger = logging.getLogger(__name__)
 
-# Create the graph
-graph = build_graph()
 
-
-async def run_agent_workflow_async(
+async def run_agent_workflow_async(  # noqa: C901
     user_input: str,
     *,
     debug: bool = False,
@@ -55,54 +51,54 @@ async def run_agent_workflow_async(
         enable_debug_logging()
 
     logger.info(f"Starting async workflow with user input: {user_input}")
-    initial_state = {
-        "messages": [{"role": "user", "content": user_input}],
-        # Runtime Variables
-        "auto_accepted_plan": True,
-        "enable_background_investigation": enable_background_investigation,
-        "locale": "en-US",
-        "research_topic": "",
-        "observations": [],
-        "resources": [],
-        "plan_iterations": 0,
-        "current_plan": None,
-        "final_report": "",
-        "background_investigation_results": None,
-    }
-    config: RunnableConfig = {
-        "configurable": {
-            "thread_id": "default",
-            "max_plan_iterations": max_plan_iterations,
-            "max_step_num": max_step_num,
-            "mcp_settings": {
-                "servers": {
-                    "mcp-github-trending": {
-                        "transport": "stdio",
-                        "command": "uvx",
-                        "args": ["mcp-github-trending"],
-                        "enabled_tools": ["get_github_trending_repositories"],
-                        "add_to_agents": ["researcher"],
-                    },
-                },
+
+    # Use the unified workflow executor
+    mcp_settings = {
+        "servers": {
+            "mcp-github-trending": {
+                "transport": "stdio",
+                "command": "uvx",
+                "args": ["mcp-github-trending"],
+                "enabled_tools": ["get_github_trending_repositories"],
+                "add_to_agents": ["researcher"],
             },
         },
-        "recursion_limit": 100,
     }
-    last_message_cnt = 0
-    async for s in graph.astream(input=initial_state, config=config, stream_mode="values"):
+
+    async for event in workflow_executor.execute_workflow(
+        messages=[{"role": "user", "content": user_input}],
+        thread_id="cli-session",
+        resources=[],
+        max_plan_iterations=max_plan_iterations,
+        max_step_num=max_step_num,
+        max_search_results=3,
+        auto_accepted_plan=True,
+        interrupt_feedback="",
+        mcp_settings=mcp_settings,
+        enable_background_investigation=enable_background_investigation,
+        report_style=ReportStyle.ACADEMIC,
+        enable_deep_thinking=False,
+        user_id="cli-user",
+        tags=["cli", "research", "langgraph"],
+    ):
         try:
-            if isinstance(s, dict) and "messages" in s:
-                if len(s["messages"]) <= last_message_cnt:
-                    continue
-                last_message_cnt = len(s["messages"])
-                message = s["messages"][-1]
-                if isinstance(message, tuple):
-                    logger.info(f"[message] Output: {message}")
-                else:
-                    message.pretty_print()
-            else:
-                # For any other output format
-                logger.info(f"Output: {s}")
+            # Process events from the unified executor
+            if event.get("type") == "message_chunk":
+                data = event.get("data", {})
+                content = data.get("content", "")
+                if content:
+                    logger.info(f"[{data.get('agent', 'unknown')}] {content}")
+            elif event.get("type") == "tool_calls":
+                data = event.get("data", {})
+                tool_calls = data.get("tool_calls", [])
+                for tool_call in tool_calls:
+                    logger.info(f"[tool_call] {tool_call.get('name', 'unknown')}: {tool_call.get('args', {})}")
+            elif event.get("type") == "tool_call_result":
+                data = event.get("data", {})
+                logger.info(f"[tool_result] {data.get('content', '')}")
+            elif event.get("type") == "interrupt":
+                data = event.get("data", {})
+                logger.info(f"[interrupt] {data.get('content', '')}")
         except (AttributeError, TypeError, ValueError):
             logger.exception("Error processing stream output")
 
@@ -110,4 +106,4 @@ async def run_agent_workflow_async(
 
 
 if __name__ == "__main__":
-    print(graph.get_graph(xray=True).draw_mermaid())  # noqa: T201
+    print(workflow_executor.graph.get_graph(xray=True).draw_mermaid())  # noqa: T201

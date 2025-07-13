@@ -6,24 +6,18 @@ import importlib.metadata
 import json
 import logging
 from collections.abc import AsyncGenerator
-from typing import Annotated, Any, cast
+from typing import Annotated, Any
 from uuid import uuid4
 
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
-from langchain_core.messages import AIMessageChunk, BaseMessage, ToolMessage
-from langchain_core.runnables import RunnableConfig
-from langfuse import Langfuse
-from langgraph.types import Command
 
 from deerflowx.config.report_style import ReportStyle
 from deerflowx.config.tools import SELECTED_RAG_PROVIDER
 from deerflowx.graphs.prompt_enhancer.graph.builder import build_graph as build_prompt_enhancer_graph
 from deerflowx.graphs.prose.graph.builder import build_graph as build_prose_graph
-from deerflowx.graphs.research.graph.builder import build_graph_with_memory
 from deerflowx.libs.rag.builder import build_retriever
-from deerflowx.libs.rag.retriever import Resource
 from deerflowx.server.chat_request import (
     DEFAULT_CHAT_REQUEST_THREAD_ID_VALUE,
     ChatRequest,
@@ -38,12 +32,8 @@ from deerflowx.server.rag_request import (
     RAGResourceRequest,
     RAGResourcesResponse,
 )
-from deerflowx.utils.langfuse_utils import (
-    create_langfuse_callback_handler,
-    get_langfuse_client,
-    is_langfuse_enabled,
-)
 from deerflowx.utils.llms.llm import get_configured_llm_models
+from deerflowx.utils.workflow_executor import workflow_executor
 
 logger = logging.getLogger(__name__)
 
@@ -64,8 +54,6 @@ app.add_middleware(
     allow_headers=["*"],  # Allows all headers
 )
 
-graph = build_graph_with_memory()
-
 
 @app.post("/api/chat/stream")
 async def chat_stream(request: ChatRequest) -> StreamingResponse:
@@ -73,172 +61,42 @@ async def chat_stream(request: ChatRequest) -> StreamingResponse:
     if thread_id == DEFAULT_CHAT_REQUEST_THREAD_ID_VALUE:
         thread_id = str(uuid4())
 
-    # Create Langfuse trace if enabled
-    langfuse_client = get_langfuse_client() if is_langfuse_enabled() else None
-
     return StreamingResponse(
-        _execute_workflow_with_langfuse(
-            request,
-            thread_id,
-            langfuse_client,
-        ),
+        _execute_workflow_with_unified_executor(request, thread_id),
         media_type="text/event-stream",
     )
 
 
-async def _execute_workflow(
+async def _execute_workflow_with_unified_executor(
     request: ChatRequest,
     thread_id: str,
 ) -> AsyncGenerator[str, None]:
-    async for event in _astream_workflow_generator(
-        request.model_dump()["messages"],
-        thread_id,
-        request.resources,
-        request.max_plan_iterations,
-        request.max_step_num,
-        request.max_search_results,
-        request.auto_accepted_plan,
-        request.interrupt_feedback or "",
-        request.mcp_settings or {},
-        request.enable_background_investigation,
-        request.report_style,
-        request.enable_deep_thinking,
+    """Execute workflow using the unified executor with Langfuse tracing."""
+    async for event in workflow_executor.execute_workflow(
+        messages=request.model_dump()["messages"],
+        thread_id=thread_id,
+        resources=request.resources,
+        max_plan_iterations=request.max_plan_iterations,
+        max_step_num=request.max_step_num,
+        max_search_results=request.max_search_results,
+        auto_accepted_plan=request.auto_accepted_plan,
+        interrupt_feedback=request.interrupt_feedback or "",
+        mcp_settings=request.mcp_settings or {},
+        enable_background_investigation=request.enable_background_investigation,
+        report_style=request.report_style,
+        enable_deep_thinking=request.enable_deep_thinking,
     ):
-        yield event
-
-
-async def _execute_workflow_with_langfuse(
-    request: ChatRequest,
-    thread_id: str,
-    langfuse_client: Langfuse | None = None,
-) -> AsyncGenerator[str, None]:
-    """Execute workflow with Langfuse tracing if enabled."""
-
-    if langfuse_client:
-        with langfuse_client.start_as_current_span(name=f"main-{thread_id}") as span:
-            span.update_trace(
-                input={
-                    "messages": request.model_dump()["messages"],
-                    "enable_deep_thinking": request.enable_deep_thinking,
-                    "report_style": request.report_style.value,
-                    "enable_background_investigation": request.enable_background_investigation,
-                },
-                session_id=thread_id,
-                user_id="deerflow-user",
-                tags=["research", "langgraph", "deepresearch"],
-            )
-
-            async for event in _execute_workflow(request=request, thread_id=thread_id):
-                yield event
-
-            span.update_trace(output={"status": "completed"})
-
-    else:
-        async for event in _execute_workflow(request=request, thread_id=thread_id):
-            yield event
-
-
-async def _astream_workflow_generator(  # noqa: C901, PLR0912, PLR0913
-    messages: list[dict],
-    thread_id: str,
-    resources: list[Resource],
-    max_plan_iterations: int,
-    max_step_num: int,
-    max_search_results: int,
-    auto_accepted_plan: bool,
-    interrupt_feedback: str,
-    mcp_settings: dict,
-    enable_background_investigation: bool,
-    report_style: ReportStyle,
-    enable_deep_thinking: bool,
-) -> AsyncGenerator[str, None]:
-    input_ = {
-        "messages": messages,
-        "plan_iterations": 0,
-        "final_report": "",
-        "current_plan": None,
-        "observations": [],
-        "auto_accepted_plan": auto_accepted_plan,
-        "enable_background_investigation": enable_background_investigation,
-        "research_topic": messages[-1]["content"] if messages else "",
-    }
-    if not auto_accepted_plan and interrupt_feedback:
-        resume_msg = f"[{interrupt_feedback}]"
-        # add the last message to the resume message
-        if messages:
-            resume_msg += f" {messages[-1]['content']}"
-        input_ = Command(resume=resume_msg)
-    graph_stream_config = {
-        "thread_id": thread_id,
-        "resources": resources,
-        "max_plan_iterations": max_plan_iterations,
-        "max_step_num": max_step_num,
-        "max_search_results": max_search_results,
-        "mcp_settings": mcp_settings,
-        "report_style": report_style.value,
-        "enable_deep_thinking": enable_deep_thinking,
-    }
-
-    # Create Langfuse CallbackHandler if enabled
-    langfuse_handler = create_langfuse_callback_handler()
-
-    config: RunnableConfig = {"configurable": graph_stream_config}
-    if langfuse_handler:
-        config["callbacks"] = [langfuse_handler]
-
-    async for agent, _, event_data in graph.astream(
-        input_,
-        config=config,
-        stream_mode=["messages", "updates"],
-        subgraphs=True,
-    ):
-        if isinstance(event_data, dict):
-            if "__interrupt__" in event_data:
-                yield _make_event(
-                    "interrupt",
-                    {
-                        "thread_id": thread_id,
-                        "id": event_data["__interrupt__"][0].ns[0],
-                        "role": "assistant",
-                        "content": event_data["__interrupt__"][0].value,
-                        "finish_reason": "interrupt",
-                        "options": [
-                            {"text": "Edit plan", "value": "edit_plan"},
-                            {"text": "Start research", "value": "accepted"},
-                        ],
-                    },
-                )
-            continue
-        message_chunk, message_metadata = cast("tuple[BaseMessage, dict[str, Any]]", event_data)
-        event_stream_message: dict[str, Any] = {
-            "thread_id": thread_id,
-            "agent": agent[0].split(":")[0],
-            "id": message_chunk.id,
-            "role": "assistant",
-            "content": message_chunk.content,
-        }
-        if message_chunk.additional_kwargs.get("reasoning_content"):
-            event_stream_message["reasoning_content"] = message_chunk.additional_kwargs["reasoning_content"]
-        if message_chunk.response_metadata.get("finish_reason"):
-            event_stream_message["finish_reason"] = message_chunk.response_metadata.get("finish_reason")
-        if isinstance(message_chunk, ToolMessage):
-            # Tool Message - Return the result of the tool call
-            event_stream_message["tool_call_id"] = message_chunk.tool_call_id
-            yield _make_event("tool_call_result", event_stream_message)
-        elif isinstance(message_chunk, AIMessageChunk):
-            # AI Message - Raw message tokens
-            if message_chunk.tool_calls:
-                # AI Message - Tool Call
-                event_stream_message["tool_calls"] = message_chunk.tool_calls
-                event_stream_message["tool_call_chunks"] = message_chunk.tool_call_chunks
-                yield _make_event("tool_calls", event_stream_message)
-            elif message_chunk.tool_call_chunks:
-                # AI Message - Tool Call Chunks
-                event_stream_message["tool_call_chunks"] = message_chunk.tool_call_chunks
-                yield _make_event("tool_call_chunks", event_stream_message)
-            else:
-                # AI Message - Raw message tokens
-                yield _make_event("message_chunk", event_stream_message)
+        # Convert unified executor event format to server event format
+        if event.get("type") == "interrupt":
+            yield _make_event("interrupt", event["data"])
+        elif event.get("type") == "tool_call_result":
+            yield _make_event("tool_call_result", event["data"])
+        elif event.get("type") == "tool_calls":
+            yield _make_event("tool_calls", event["data"])
+        elif event.get("type") == "tool_call_chunks":
+            yield _make_event("tool_call_chunks", event["data"])
+        elif event.get("type") == "message_chunk":
+            yield _make_event("message_chunk", event["data"])
 
 
 def _make_event(event_type: str, data: dict[str, Any]) -> str:
