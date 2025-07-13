@@ -27,6 +27,9 @@ format:
 lint-format: lint format
     @echo "Done"
 
+test:
+    uv run pytest
+
 coverage:
 	uv run pytest --cov=src tests/ --cov-report=term-missing --cov-report=xml
 

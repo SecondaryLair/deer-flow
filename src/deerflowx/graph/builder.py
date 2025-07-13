@@ -9,14 +9,14 @@ from langgraph.graph.state import CompiledStateGraph
 from deerflowx.prompts.planner_model import StepType
 
 from .nodes import (
-    background_investigation_node,
-    coder_node,
-    coordinator_node,
-    human_feedback_node,
-    planner_node,
-    reporter_node,
-    research_team_node,
-    researcher_node,
+    BackgroundInvestigationNode,
+    CoderNode,
+    CoordinatorNode,
+    HumanFeedbackNode,
+    PlannerNode,
+    ReporterNode,
+    ResearcherNode,
+    ResearchTeamNode,
 )
 from .types import State
 
@@ -40,22 +40,22 @@ def continue_to_running_research_team(state: State) -> str:
 def _build_base_graph() -> StateGraph:
     """Build and return the base state graph with all nodes and edges."""
     builder = StateGraph(State)
-    builder.add_edge(START, "coordinator")
-    builder.add_node("coordinator", coordinator_node)
-    builder.add_node("background_investigator", background_investigation_node)
-    builder.add_node("planner", planner_node)
-    builder.add_node("reporter", reporter_node)
-    builder.add_node("research_team", research_team_node)
-    builder.add_node("researcher", researcher_node)
-    builder.add_node("coder", coder_node)
-    builder.add_node("human_feedback", human_feedback_node)
-    builder.add_edge("background_investigator", "planner")
+    builder.add_edge(START, CoordinatorNode.name())
+    builder.add_node(CoordinatorNode.name(), CoordinatorNode.action)
+    builder.add_node(BackgroundInvestigationNode.name(), BackgroundInvestigationNode.action)
+    builder.add_node(PlannerNode.name(), PlannerNode.action)
+    builder.add_node(ReporterNode.name(), ReporterNode.action)
+    builder.add_node(ResearchTeamNode.name(), ResearchTeamNode.action)
+    builder.add_node(ResearcherNode.name(), ResearcherNode.action)
+    builder.add_node(CoderNode.name(), CoderNode.action)
+    builder.add_node(HumanFeedbackNode.name(), HumanFeedbackNode.action)
+    builder.add_edge(BackgroundInvestigationNode.name(), PlannerNode.name())
     builder.add_conditional_edges(
-        "research_team",
+        ResearchTeamNode.name(),
         continue_to_running_research_team,
-        ["planner", "researcher", "coder"],
+        [PlannerNode.name(), ResearcherNode.name(), CoderNode.name()],
     )
-    builder.add_edge("reporter", END)
+    builder.add_edge(ReporterNode.name(), END)
     return builder
 
 

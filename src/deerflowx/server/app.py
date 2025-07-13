@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: MIT
 """FastAPI server application for deer-flow research assistant."""
 
+import importlib.metadata
 import json
 import logging
 from collections.abc import AsyncGenerator
@@ -51,7 +52,7 @@ INTERNAL_SERVER_ERROR_DETAIL = "Internal Server Error"
 app = FastAPI(
     title="DeerFlow API",
     description="API for Deer",
-    version="0.1.0",
+    version=importlib.metadata.version("deerflowx"),
 )
 
 # Add CORS middleware
@@ -113,23 +114,6 @@ async def _execute_workflow_with_langfuse(
 ) -> AsyncGenerator[str, None]:
     """Execute workflow with Langfuse tracing if enabled."""
 
-    async def _() -> AsyncGenerator[str, None]:
-        async for event in _astream_workflow_generator(
-            request.model_dump()["messages"],
-            thread_id,
-            request.resources,
-            request.max_plan_iterations,
-            request.max_step_num,
-            request.max_search_results,
-            request.auto_accepted_plan,
-            request.interrupt_feedback or "",
-            request.mcp_settings or {},
-            request.enable_background_investigation,
-            request.report_style,
-            request.enable_deep_thinking,
-        ):
-            yield event
-
     if langfuse_client:
         with langfuse_client.start_as_current_span(name=f"main-{thread_id}") as span:
             span.update_trace(
@@ -144,13 +128,13 @@ async def _execute_workflow_with_langfuse(
                 tags=["research", "langgraph", "deepresearch"],
             )
 
-            async for event in _():
+            async for event in _execute_workflow(request=request, thread_id=thread_id):
                 yield event
 
             span.update_trace(output={"status": "completed"})
 
     else:
-        async for event in _():
+        async for event in _execute_workflow(request=request, thread_id=thread_id):
             yield event
 
 

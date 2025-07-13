@@ -8,13 +8,13 @@ class ProseState(MessagesState):
     """State for the prose generation."""
 
     # The content of the prose
-    content: str = ""
+    content: str
 
     # Prose writer option: continue, improve, shorter, longer, fix, zap
-    option: str = ""
+    option: str
 
     # The user custom command for the prose writer
-    command: str = ""
+    command: str
 
     # Output
-    output: str = ""
+    output: str

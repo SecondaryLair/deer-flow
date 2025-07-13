@@ -28,6 +28,7 @@ from deerflowx.tools import (
 )
 from deerflowx.tools.search import LoggedTavilySearch
 from deerflowx.utils.json_utils import repair_json_output
+from deerflowx.utils.node_base import NodeBase
 
 from .types import State
 
@@ -45,7 +46,7 @@ def handoff_to_planner(
     return
 
 
-def background_investigation_node(state: State, config: RunnableConfig) -> dict[str, Any]:
+async def background_investigation_node(state: State, config: RunnableConfig) -> dict[str, Any]:
     logger.info("background investigation node is running.")
     configurable = Configuration.from_runnable_config(config)
     query = state.get("research_topic")
@@ -61,7 +62,20 @@ def background_investigation_node(state: State, config: RunnableConfig) -> dict[
     return {"background_investigation_results": json.dumps(background_investigation_results, ensure_ascii=False)}
 
 
-def planner_node(state: State, config: RunnableConfig) -> Command[Literal["human_feedback", "reporter"]]:
+class BackgroundInvestigationNode(NodeBase):
+    """Background investigation node that performs initial research."""
+
+    @classmethod
+    def name(cls) -> str:
+        return "background_investigator"
+
+    @classmethod
+    async def action(cls, state: State, config: RunnableConfig) -> dict[str, Any]:
+        """Background investigation node that performs initial research."""
+        return await background_investigation_node(state, config)
+
+
+async def planner_node(state: State, config: RunnableConfig) -> Command[Literal["human_feedback", "reporter"]]:
     """Planner node that generate the full plan."""
     logger.info("Planner generating full plan")
     configurable = Configuration.from_runnable_config(config)
@@ -131,7 +145,20 @@ def planner_node(state: State, config: RunnableConfig) -> Command[Literal["human
     )
 
 
-def human_feedback_node(
+class PlannerNode(NodeBase):
+    """Planner node that generate the full plan."""
+
+    @classmethod
+    def name(cls) -> str:
+        return "planner"
+
+    @classmethod
+    async def action(cls, state: State, config: RunnableConfig) -> Command[Literal["human_feedback", "reporter"]]:
+        """Planner node that generate the full plan."""
+        return await planner_node(state, config)
+
+
+async def human_feedback_node(
     state: State,
 ) -> Command[Literal["planner", "research_team", "reporter", "__end__"]]:
     current_plan = state.get("current_plan", "")
@@ -183,7 +210,20 @@ def human_feedback_node(
     )
 
 
-def coordinator_node(
+class HumanFeedbackNode(NodeBase):
+    """Human feedback node for plan review."""
+
+    @classmethod
+    def name(cls) -> str:
+        return "human_feedback"
+
+    @classmethod
+    async def action(cls, state: State) -> Command[Literal["planner", "research_team", "reporter", "__end__"]]:
+        """Human feedback node for plan review."""
+        return await human_feedback_node(state)
+
+
+async def coordinator_node(
     state: State,
     config: RunnableConfig,
 ) -> Command[Literal["planner", "background_investigator", "__end__"]]:
@@ -227,7 +267,24 @@ def coordinator_node(
     )
 
 
-def reporter_node(state: State, config: RunnableConfig) -> dict[str, Any]:
+class CoordinatorNode(NodeBase):
+    """Coordinator node that communicate with customers."""
+
+    @classmethod
+    def name(cls) -> str:
+        return "coordinator"
+
+    @classmethod
+    async def action(
+        cls,
+        state: State,
+        config: RunnableConfig,
+    ) -> Command[Literal["planner", "background_investigator", "__end__"]]:
+        """Coordinator node that communicate with customers."""
+        return await coordinator_node(state, config)
+
+
+async def reporter_node(state: State, config: RunnableConfig) -> dict[str, Any]:
     """Reporter node that write a final report."""
     logger.info("Reporter write final report")
     configurable = Configuration.from_runnable_config(config)
@@ -287,10 +344,36 @@ def reporter_node(state: State, config: RunnableConfig) -> dict[str, Any]:
     return {"final_report": response_content}
 
 
-def research_team_node(_state: State) -> dict[str, Any]:
+class ReporterNode(NodeBase):
+    """Reporter node that write a final report."""
+
+    @classmethod
+    def name(cls) -> str:
+        return "reporter"
+
+    @classmethod
+    async def action(cls, state: State, config: RunnableConfig) -> dict[str, Any]:
+        """Reporter node that write a final report."""
+        return await reporter_node(state, config)
+
+
+async def research_team_node(_state: State) -> dict[str, Any]:
     """Research team node that collaborates on tasks."""
     logger.info("Research team is collaborating on tasks.")
     return {}
+
+
+class ResearchTeamNode(NodeBase):
+    """Research team node that collaborates on tasks."""
+
+    @classmethod
+    def name(cls) -> str:
+        return "research_team"
+
+    @classmethod
+    async def action(cls, state: State) -> dict[str, Any]:
+        """Research team node that collaborates on tasks."""
+        return await research_team_node(state)
 
 
 async def _execute_agent_step(state: State, agent: CompiledGraph, agent_name: str) -> Command[Literal["research_team"]]:  # noqa: C901
@@ -477,6 +560,19 @@ async def researcher_node(state: State, config: RunnableConfig) -> Command[Liter
     )
 
 
+class ResearcherNode(NodeBase):
+    """Researcher node that do research."""
+
+    @classmethod
+    def name(cls) -> str:
+        return "researcher"
+
+    @classmethod
+    async def action(cls, state: State, config: RunnableConfig) -> Command[Literal["research_team"]]:
+        """Researcher node that do research."""
+        return await researcher_node(state, config)
+
+
 async def coder_node(state: State, config: RunnableConfig) -> Command[Literal["research_team"]]:
     """Coder node that do code analysis."""
     logger.info("Coder node is coding.")
@@ -486,3 +582,16 @@ async def coder_node(state: State, config: RunnableConfig) -> Command[Literal["r
         "coder",
         [python_repl_tool],
     )
+
+
+class CoderNode(NodeBase):
+    """Coder node that do code analysis."""
+
+    @classmethod
+    def name(cls) -> str:
+        return "coder"
+
+    @classmethod
+    async def action(cls, state: State, config: RunnableConfig) -> Command[Literal["research_team"]]:
+        """Coder node that do code analysis."""
+        return await coder_node(state, config)

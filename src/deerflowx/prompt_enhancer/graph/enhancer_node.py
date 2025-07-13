@@ -2,18 +2,19 @@
 # SPDX-License-Identifier: MIT
 
 import logging
+from typing import Any
 
 from langchain.schema import HumanMessage
 
 from deerflowx.config.agents import AGENT_LLM_MAP
 from deerflowx.llms.llm import get_llm_by_type
 from deerflowx.prompt_enhancer.graph.state import PromptEnhancerState
-from deerflowx.prompts.template import apply_prompt_template
+from deerflowx.utils.node_base import NodeBase
 
 logger = logging.getLogger(__name__)
 
 
-def prompt_enhancer_node(state: PromptEnhancerState) -> dict[str, str]:
+async def prompt_enhancer_node(state: PromptEnhancerState) -> dict[str, Any]:
     """Node that enhances user prompts using AI analysis."""
     logger.info("Enhancing user prompt...")
 
@@ -25,23 +26,17 @@ def prompt_enhancer_node(state: PromptEnhancerState) -> dict[str, str]:
         if state.get("context"):
             context_info = f"\n\nAdditional context: {state['context']}"
 
-        original_prompt_message = HumanMessage(
-            content=f"Please enhance this prompt:{context_info}\n\nOriginal prompt: {state['prompt']}",
-        )
-
-        messages = apply_prompt_template(
-            "prompt_enhancer/prompt_enhancer",
-            {
-                "messages": [original_prompt_message],
-                "report_style": state.get("report_style"),
-            },
-        )
+        prompt_message = f"Please enhance this prompt:{context_info}\n\nOriginal prompt: {state['prompt']}"
 
         # Get the response from the model
-        response = model.invoke(messages)
+        response = model.invoke([HumanMessage(content=prompt_message)])
 
         # Clean up the response - remove any extra formatting or comments
-        enhanced_prompt = response.content.strip()
+        enhanced_prompt = response.content if hasattr(response, "content") else str(response)
+
+        # Ensure we have a string
+        if not isinstance(enhanced_prompt, str):
+            enhanced_prompt = str(enhanced_prompt)
 
         # Remove common prefixes that might be added by the model
         prefixes_to_remove = [
@@ -58,10 +53,27 @@ def prompt_enhancer_node(state: PromptEnhancerState) -> dict[str, str]:
                 enhanced_prompt = enhanced_prompt[len(prefix) :].strip()
                 break
 
-    except BaseException:
-        logger.exception("Error in prompt enhancement")
-        return {"output": state["prompt"]}
+        # Always strip whitespace from the final result
+        enhanced_prompt = enhanced_prompt.strip()
+
+        logger.info(f"Enhanced prompt: {enhanced_prompt}")
+
+    except Exception:
+        logger.exception("Error enhancing prompt ")
+        # Return original prompt if enhancement fails
+        return {"enhanced_prompt": state["prompt"]}
     else:
-        logger.info("Prompt enhancement completed successfully")
-        logger.debug(f"Enhanced prompt: {enhanced_prompt}")
-        return {"output": enhanced_prompt}
+        return {"enhanced_prompt": enhanced_prompt}
+
+
+class PromptEnhancerNode(NodeBase):
+    """Prompt enhancer node."""
+
+    @classmethod
+    def name(cls) -> str:
+        return "enhancer"
+
+    @classmethod
+    async def action(cls, state: PromptEnhancerState) -> Any:
+        """Prompt enhancer node."""
+        return await prompt_enhancer_node(state)

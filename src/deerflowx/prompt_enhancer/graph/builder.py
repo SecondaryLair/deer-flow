@@ -4,7 +4,7 @@
 from langgraph.graph import StateGraph
 from langgraph.graph.graph import CompiledGraph
 
-from deerflowx.prompt_enhancer.graph.enhancer_node import prompt_enhancer_node
+from deerflowx.prompt_enhancer.graph.enhancer_node import PromptEnhancerNode
 from deerflowx.prompt_enhancer.graph.state import PromptEnhancerState
 
 
@@ -14,13 +14,13 @@ def build_graph() -> CompiledGraph:
     builder = StateGraph(PromptEnhancerState)
 
     # Add the enhancer node
-    builder.add_node("enhancer", prompt_enhancer_node)
+    builder.add_node(PromptEnhancerNode.name(), PromptEnhancerNode.action)
 
     # Set entry point
-    builder.set_entry_point("enhancer")
+    builder.set_entry_point(PromptEnhancerNode.name())
 
     # Set finish point
-    builder.set_finish_point("enhancer")
+    builder.set_finish_point(PromptEnhancerNode.name())
 
     # Compile and return the graph
     return builder.compile()

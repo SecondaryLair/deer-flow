@@ -31,136 +31,120 @@ def mock_messages():
 class TestPromptEnhancerNode:
     """Test cases for prompt_enhancer_node function."""
 
-    @patch("deerflowx.prompt_enhancer.graph.enhancer_node.apply_prompt_template")
+    @pytest.mark.asyncio
     @patch("deerflowx.prompt_enhancer.graph.enhancer_node.get_llm_by_type")
-    @patch(
-        "deerflowx.prompt_enhancer.graph.enhancer_node.AGENT_LLM_MAP",
-        {"prompt_enhancer": "basic"},
-    )
-    def test_basic_prompt_enhancement(self, mock_get_llm, mock_apply_template, mock_llm, mock_messages):
+    @patch("deerflowx.prompt_enhancer.graph.enhancer_node.AGENT_LLM_MAP", {"prompt_enhancer": "basic"})
+    async def test_basic_prompt_enhancement(self, mock_get_llm, mock_llm, mock_messages):
         """Test basic prompt enhancement without context or report style."""
         mock_get_llm.return_value = mock_llm
-        mock_apply_template.return_value = mock_messages
 
-        state = PromptEnhancerState(prompt="Write about AI")
+        state = PromptEnhancerState(prompt="Write about AI", context=None, report_style=None, output=None)
 
-        result = prompt_enhancer_node(state)
+        result = await prompt_enhancer_node(state)
 
         # Verify LLM was called
         mock_get_llm.assert_called_once_with("basic")
-        mock_llm.invoke.assert_called_once_with(mock_messages)
-
-        # Verify apply_prompt_template was called correctly
-        mock_apply_template.assert_called_once()
-        call_args = mock_apply_template.call_args
-        assert call_args[0][0] == "prompt_enhancer/prompt_enhancer"
-        assert "messages" in call_args[0][1]
-        assert "report_style" in call_args[0][1]
+        mock_llm.invoke.assert_called_once()
 
         # Verify result
-        assert result == {"output": "Enhanced test prompt"}
+        assert result == {"enhanced_prompt": "Enhanced test prompt"}
 
-    @patch("deerflowx.prompt_enhancer.graph.enhancer_node.apply_prompt_template")
+    @pytest.mark.asyncio
     @patch("deerflowx.prompt_enhancer.graph.enhancer_node.get_llm_by_type")
     @patch(
         "deerflowx.prompt_enhancer.graph.enhancer_node.AGENT_LLM_MAP",
         {"prompt_enhancer": "basic"},
     )
-    def test_prompt_enhancement_with_report_style(self, mock_get_llm, mock_apply_template, mock_llm, mock_messages):
+    async def test_prompt_enhancement_with_report_style(self, mock_get_llm, mock_llm):
         """Test prompt enhancement with report style."""
         mock_get_llm.return_value = mock_llm
-        mock_apply_template.return_value = mock_messages
 
-        state = PromptEnhancerState(prompt="Write about AI", report_style=ReportStyle.ACADEMIC)
+        state = PromptEnhancerState(
+            prompt="Write about AI", context=None, report_style=ReportStyle.ACADEMIC, output=None
+        )
 
-        result = prompt_enhancer_node(state)
+        result = await prompt_enhancer_node(state)
 
-        # Verify apply_prompt_template was called with report_style
-        mock_apply_template.assert_called_once()
-        call_args = mock_apply_template.call_args
-        assert call_args[0][0] == "prompt_enhancer/prompt_enhancer"
-        assert call_args[0][1]["report_style"] == ReportStyle.ACADEMIC
+        # Verify LLM was called
+        mock_get_llm.assert_called_once_with("basic")
+        mock_llm.invoke.assert_called_once()
 
-        # Verify result
-        assert result == {"output": "Enhanced test prompt"}
+        assert result == {"enhanced_prompt": "Enhanced test prompt"}
 
-    @patch("deerflowx.prompt_enhancer.graph.enhancer_node.apply_prompt_template")
+    @pytest.mark.asyncio
     @patch("deerflowx.prompt_enhancer.graph.enhancer_node.get_llm_by_type")
     @patch(
         "deerflowx.prompt_enhancer.graph.enhancer_node.AGENT_LLM_MAP",
         {"prompt_enhancer": "basic"},
     )
-    def test_prompt_enhancement_with_context(self, mock_get_llm, mock_apply_template, mock_llm, mock_messages):
+    async def test_prompt_enhancement_with_context(self, mock_get_llm, mock_llm):
         """Test prompt enhancement with additional context."""
         mock_get_llm.return_value = mock_llm
-        mock_apply_template.return_value = mock_messages
 
-        state = PromptEnhancerState(prompt="Write about AI", context="Focus on machine learning applications")
+        state = PromptEnhancerState(
+            prompt="Write about AI", context="Focus on machine learning applications", report_style=None, output=None
+        )
 
-        result = prompt_enhancer_node(state)
+        result = await prompt_enhancer_node(state)
 
-        # Verify apply_prompt_template was called
-        mock_apply_template.assert_called_once()
-        call_args = mock_apply_template.call_args
+        # Verify LLM was called
+        mock_get_llm.assert_called_once_with("basic")
+        mock_llm.invoke.assert_called_once()
 
-        # Check that the context was included in the human message
-        messages_arg = call_args[0][1]["messages"]
-        assert len(messages_arg) == 1
-        human_message = messages_arg[0]
-        assert isinstance(human_message, HumanMessage)
-        assert "Focus on machine learning applications" in human_message.content
+        # Verify context was included in the message
+        call_args = mock_llm.invoke.call_args
+        message_content = call_args[0][0][0].content
+        assert "Focus on machine learning applications" in message_content
 
-        assert result == {"output": "Enhanced test prompt"}
+        assert result == {"enhanced_prompt": "Enhanced test prompt"}
 
-    @patch("deerflowx.prompt_enhancer.graph.enhancer_node.apply_prompt_template")
+    @pytest.mark.asyncio
     @patch("deerflowx.prompt_enhancer.graph.enhancer_node.get_llm_by_type")
     @patch(
         "deerflowx.prompt_enhancer.graph.enhancer_node.AGENT_LLM_MAP",
         {"prompt_enhancer": "basic"},
     )
-    def test_error_handling(self, mock_get_llm, mock_apply_template, mock_llm, mock_messages):
+    async def test_error_handling(self, mock_get_llm, mock_llm):
         """Test error handling when LLM call fails."""
         mock_get_llm.return_value = mock_llm
-        mock_apply_template.return_value = mock_messages
 
         # Mock LLM to raise an exception
         mock_llm.invoke.side_effect = Exception("LLM error")
 
-        state = PromptEnhancerState(prompt="Test prompt")
-        result = prompt_enhancer_node(state)
+        state = PromptEnhancerState(prompt="Test prompt", context=None, report_style=None, output=None)
+        result = await prompt_enhancer_node(state)
 
         # Should return original prompt on error
-        assert result == {"output": "Test prompt"}
+        assert result == {"enhanced_prompt": "Test prompt"}
 
-    @patch("deerflowx.prompt_enhancer.graph.enhancer_node.apply_prompt_template")
+    @pytest.mark.asyncio
     @patch("deerflowx.prompt_enhancer.graph.enhancer_node.get_llm_by_type")
     @patch(
         "deerflowx.prompt_enhancer.graph.enhancer_node.AGENT_LLM_MAP",
         {"prompt_enhancer": "basic"},
     )
-    def test_template_error_handling(self, mock_get_llm, mock_apply_template, mock_llm, mock_messages):
+    async def test_template_error_handling(self, mock_get_llm, mock_llm):
         """Test error handling when template application fails."""
         mock_get_llm.return_value = mock_llm
 
-        # Mock apply_prompt_template to raise an exception
-        mock_apply_template.side_effect = Exception("Template error")
+        # Mock LLM to raise an exception
+        mock_llm.invoke.side_effect = Exception("Template error")
 
-        state = PromptEnhancerState(prompt="Test prompt")
-        result = prompt_enhancer_node(state)
+        state = PromptEnhancerState(prompt="Test prompt", context=None, report_style=None, output=None)
+        result = await prompt_enhancer_node(state)
 
         # Should return original prompt on error
-        assert result == {"output": "Test prompt"}
+        assert result == {"enhanced_prompt": "Test prompt"}
 
-    @patch("deerflowx.prompt_enhancer.graph.enhancer_node.apply_prompt_template")
+    @pytest.mark.asyncio
     @patch("deerflowx.prompt_enhancer.graph.enhancer_node.get_llm_by_type")
     @patch(
         "deerflowx.prompt_enhancer.graph.enhancer_node.AGENT_LLM_MAP",
         {"prompt_enhancer": "basic"},
     )
-    def test_prefix_removal(self, mock_get_llm, mock_apply_template, mock_llm, mock_messages):
+    async def test_prefix_removal(self, mock_get_llm, mock_llm):
         """Test that common prefixes are removed from LLM response."""
         mock_get_llm.return_value = mock_llm
-        mock_apply_template.return_value = mock_messages
 
         # Test different prefixes that should be removed
         test_cases = [
@@ -175,26 +159,26 @@ class TestPromptEnhancerNode:
         for response_with_prefix in test_cases:
             mock_llm.invoke.return_value = MagicMock(content=response_with_prefix)
 
-            state = PromptEnhancerState(prompt="Test prompt")
-            result = prompt_enhancer_node(state)
+            state = PromptEnhancerState(prompt="Test prompt", context=None, report_style=None, output=None)
+            result = await prompt_enhancer_node(state)
 
-            assert result == {"output": "This is the enhanced prompt"}
+            assert result == {"enhanced_prompt": "This is the enhanced prompt"}
 
-    @patch("deerflowx.prompt_enhancer.graph.enhancer_node.apply_prompt_template")
+    @pytest.mark.asyncio
     @patch("deerflowx.prompt_enhancer.graph.enhancer_node.get_llm_by_type")
     @patch(
         "deerflowx.prompt_enhancer.graph.enhancer_node.AGENT_LLM_MAP",
         {"prompt_enhancer": "basic"},
     )
-    def test_whitespace_handling(self, mock_get_llm, mock_apply_template, mock_llm, mock_messages):
-        """Test that whitespace is properly stripped from LLM response."""
+    async def test_whitespace_handling(self, mock_get_llm, mock_llm):
+        """Test that whitespace is properly handled in responses."""
         mock_get_llm.return_value = mock_llm
-        mock_apply_template.return_value = mock_messages
 
-        # Mock LLM response with extra whitespace
-        mock_llm.invoke.return_value = MagicMock(content="  \n\n  Enhanced prompt  \n\n  ")
+        # Test response with extra whitespace
+        mock_llm.invoke.return_value = MagicMock(content="   Enhanced prompt with whitespace   ")
 
-        state = PromptEnhancerState(prompt="Test prompt")
-        result = prompt_enhancer_node(state)
+        state = PromptEnhancerState(prompt="Test prompt", context=None, report_style=None, output=None)
+        result = await prompt_enhancer_node(state)
 
-        assert result == {"output": "Enhanced prompt"}
+        # Should strip whitespace
+        assert result == {"enhanced_prompt": "Enhanced prompt with whitespace"}

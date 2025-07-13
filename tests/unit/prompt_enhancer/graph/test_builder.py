@@ -39,8 +39,8 @@ class TestBuildGraph:
         assert result == mock_compiled_graph
 
     @patch("deerflowx.prompt_enhancer.graph.builder.StateGraph")
-    @patch("deerflowx.prompt_enhancer.graph.builder.prompt_enhancer_node")
-    def test_build_graph_node_function(self, mock_enhancer_node, mock_state_graph):
+    @patch("deerflowx.prompt_enhancer.graph.builder.PromptEnhancerNode")
+    def test_build_graph_node_function(self, mock_enhancer_node_class, mock_state_graph):
         """Test that the correct node function is added to the graph."""
         mock_builder = MagicMock()
         mock_compiled_graph = MagicMock()
@@ -48,10 +48,14 @@ class TestBuildGraph:
         mock_state_graph.return_value = mock_builder
         mock_builder.compile.return_value = mock_compiled_graph
 
+        # Mock the class methods
+        mock_enhancer_node_class.name.return_value = "enhancer"
+        mock_enhancer_node_class.action = MagicMock()
+
         result = build_graph()
 
         # Verify the correct node function was added
-        mock_builder.add_node.assert_called_once_with("enhancer", mock_enhancer_node)
+        mock_builder.add_node.assert_called_once_with("enhancer", mock_enhancer_node_class.action)
 
     def test_build_graph_returns_compiled_graph(self):
         """Test that build_graph returns a compiled graph object."""

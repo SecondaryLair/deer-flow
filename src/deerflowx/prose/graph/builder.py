@@ -7,12 +7,12 @@ import logging
 from langgraph.graph import END, START, StateGraph
 from langgraph.graph.state import CompiledStateGraph
 
-from deerflowx.prose.graph.prose_continue_node import prose_continue_node
-from deerflowx.prose.graph.prose_fix_node import prose_fix_node
-from deerflowx.prose.graph.prose_improve_node import prose_improve_node
-from deerflowx.prose.graph.prose_longer_node import prose_longer_node
-from deerflowx.prose.graph.prose_shorter_node import prose_shorter_node
-from deerflowx.prose.graph.prose_zap_node import prose_zap_node
+from deerflowx.prose.graph.prose_continue_node import ProseContinueNode
+from deerflowx.prose.graph.prose_fix_node import ProseFixNode
+from deerflowx.prose.graph.prose_improve_node import ProseImproveNode
+from deerflowx.prose.graph.prose_longer_node import ProseLongerNode
+from deerflowx.prose.graph.prose_shorter_node import ProseShorterNode
+from deerflowx.prose.graph.prose_zap_node import ProseZapNode
 from deerflowx.prose.graph.state import ProseState
 
 
@@ -24,22 +24,22 @@ def build_graph() -> CompiledStateGraph:
     """Build and return the prose workflow graph."""
     # build state graph
     builder = StateGraph(ProseState)
-    builder.add_node("prose_continue", prose_continue_node)
-    builder.add_node("prose_improve", prose_improve_node)
-    builder.add_node("prose_shorter", prose_shorter_node)
-    builder.add_node("prose_longer", prose_longer_node)
-    builder.add_node("prose_fix", prose_fix_node)
-    builder.add_node("prose_zap", prose_zap_node)
+    builder.add_node(ProseContinueNode.name(), ProseContinueNode.action)
+    builder.add_node(ProseImproveNode.name(), ProseImproveNode.action)
+    builder.add_node(ProseShorterNode.name(), ProseShorterNode.action)
+    builder.add_node(ProseLongerNode.name(), ProseLongerNode.action)
+    builder.add_node(ProseFixNode.name(), ProseFixNode.action)
+    builder.add_node(ProseZapNode.name(), ProseZapNode.action)
     builder.add_conditional_edges(
         START,
         optional_node,
         {
-            "continue": "prose_continue",
-            "improve": "prose_improve",
-            "shorter": "prose_shorter",
-            "longer": "prose_longer",
-            "fix": "prose_fix",
-            "zap": "prose_zap",
+            "continue": ProseContinueNode.name(),
+            "improve": ProseImproveNode.name(),
+            "shorter": ProseShorterNode.name(),
+            "longer": ProseLongerNode.name(),
+            "fix": ProseFixNode.name(),
+            "zap": ProseZapNode.name(),
         },
         END,
     )
