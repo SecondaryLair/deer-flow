@@ -103,7 +103,3 @@ async def run_agent_workflow_async(  # noqa: C901
             logger.exception("Error processing stream output")
 
     logger.info("Async workflow completed successfully")
-
-
-if __name__ == "__main__":
-    print(workflow_executor.graph.get_graph(xray=True).draw_mermaid())  # noqa: T201

@@ -76,3 +76,11 @@ def build_graph() -> CompiledStateGraph:
 
 
 graph = build_graph()
+
+
+def example_get_mermaid_graph() -> None:
+    print(build_graph().get_graph(xray=True).draw_mermaid())  # noqa: T201
+
+
+if __name__ == "__main__":
+    example_get_mermaid_graph()

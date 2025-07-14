@@ -24,3 +24,11 @@ def build_graph() -> CompiledGraph:
 
     # Compile and return the graph
     return builder.compile()
+
+
+def example_get_mermaid_graph() -> None:
+    print(build_graph().get_graph(xray=True).draw_mermaid())  # noqa: T201
+
+
+if __name__ == "__main__":
+    example_get_mermaid_graph()

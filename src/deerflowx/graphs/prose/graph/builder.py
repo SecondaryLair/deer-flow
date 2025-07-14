@@ -60,9 +60,17 @@ async def _test_workflow() -> None:
         event[0]
 
 
-if __name__ == "__main__":
-    from dotenv import load_dotenv
+def example_test_workflow() -> None:
+    from dotenv import load_dotenv  # noqa: PLC0415
 
     load_dotenv()
     logging.basicConfig(level=logging.INFO)
     asyncio.run(_test_workflow())
+
+
+def example_get_mermaid_graph() -> None:
+    print(build_graph().get_graph(xray=True).draw_mermaid())  # noqa: T201
+
+
+if __name__ == "__main__":
+    example_get_mermaid_graph()
