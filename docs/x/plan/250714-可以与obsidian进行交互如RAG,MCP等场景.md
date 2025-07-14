@@ -1,0 +1,1 @@
+结合 [coddingtonbear/obsidian-local-rest-api: Unlock your automation needs by interacting with your notes in Obsidian over a secure REST API.](https://github.com/coddingtonbear/obsidian-local-rest-api) 该插件使用
