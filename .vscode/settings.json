@@ -31,5 +31,10 @@
         "**/__pycache__": true,
         "**/dist": true,
         "**/build": true,
-    }
+    },
+    "python.testing.pytestArgs": [
+        "tests"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true
 }
