@@ -9,7 +9,7 @@ from langgraph.types import Command
 
 from deerflowx.config.configuration import Configuration
 from deerflowx.graphs.research.graph.nodes._executor import _setup_and_execute_agent_step
-from deerflowx.graphs.research.graph.types import State
+from deerflowx.graphs.research.graph.state import State
 from deerflowx.tools import (
     crawl_tool,
     get_retriever_tool,

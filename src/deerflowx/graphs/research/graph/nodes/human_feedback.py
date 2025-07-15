@@ -8,7 +8,7 @@ from typing import Literal
 from langchain_core.messages import HumanMessage
 from langgraph.types import Command, interrupt
 
-from deerflowx.graphs.research.graph.types import State
+from deerflowx.graphs.research.graph.state import State
 from deerflowx.prompts.planner_model import Plan
 from deerflowx.utils.json_utils import repair_json_output
 from deerflowx.utils.node_base import NodeBase
@@ -41,17 +41,33 @@ async def human_feedback_node(
             msg = f"Interrupt value of {feedback} is not supported."
             raise TypeError(msg)
 
-    # if the plan is accepted, run the following node
     plan_iterations = state["plan_iterations"] if state.get("plan_iterations", 0) else 0
     goto = "research_team"
     try:
-        current_plan = repair_json_output(current_plan)
+        if isinstance(current_plan, str):
+            current_plan_str = repair_json_output(current_plan)
+        else:
+            current_plan_str = (
+                current_plan.model_dump_json() if hasattr(current_plan, "model_dump_json") else str(current_plan)
+            )
+
         # increment the plan iterations
         plan_iterations += 1
         # parse the plan
-        new_plan = json.loads(current_plan)
-        if new_plan["has_enough_context"]:
+        new_plan = json.loads(current_plan_str)
+
+        has_research_steps = new_plan.get("steps") and any(
+            step.get("need_search", False) or step.get("step_type") == "research" for step in new_plan.get("steps", [])
+        )
+
+        if has_research_steps:
+            logger.info(f"Plan contains {len(new_plan.get('steps', []))} steps, proceeding to research team")
+            goto = "research_team"
+        elif new_plan["has_enough_context"]:
+            logger.info("Plan has enough context and no research steps, proceeding directly to reporter")
             goto = "reporter"
+        else:
+            goto = "research_team"
     except json.JSONDecodeError:
         logger.warning("Planner response is not a valid JSON")
         if plan_iterations > 1:  # the plan_iterations is increased before this check

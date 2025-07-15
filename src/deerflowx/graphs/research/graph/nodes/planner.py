@@ -11,7 +11,7 @@ from langgraph.types import Command
 
 from deerflowx.config.agents import AGENT_LLM_MAP
 from deerflowx.config.configuration import Configuration
-from deerflowx.graphs.research.graph.types import State
+from deerflowx.graphs.research.graph.state import State
 from deerflowx.prompts.planner_model import Plan
 from deerflowx.prompts.template import apply_prompt_template
 from deerflowx.utils.json_utils import repair_json_output

@@ -3,6 +3,7 @@ import os
 from typing import Any, Literal
 
 from langchain_core.messages import HumanMessage
+from langchain_core.messages.utils import count_tokens_approximately
 from langchain_core.runnables import RunnableConfig
 from langchain_mcp_adapters.client import MultiServerMCPClient
 from langgraph.graph.graph import CompiledGraph
@@ -11,7 +12,7 @@ from langgraph.types import Command
 
 from deerflowx.config.agents import AGENT_LLM_MAP
 from deerflowx.config.configuration import Configuration
-from deerflowx.graphs.research.graph.types import State
+from deerflowx.graphs.research.graph.state import State
 from deerflowx.prompts import apply_prompt_template
 from deerflowx.utils.llms.llm import get_llm_by_type
 
@@ -34,10 +35,14 @@ def create_agent(
     )
 
 
-async def _execute_agent_step(state: State, agent: CompiledGraph, agent_name: str) -> Command[Literal["research_team"]]:  # noqa: C901
+async def _execute_agent_step(state: State, agent: CompiledGraph, agent_name: str) -> Command[Literal["research_team"]]:  # noqa: C901, PLR0912, PLR0915 # TODO: @l8ng 太复杂了需要重构
     """Helper function to execute a step using the specified agent."""
     current_plan = state.get("current_plan")
     observations = state.get("observations", [])
+
+    if not current_plan or isinstance(current_plan, str):
+        logger.warning("Invalid current_plan type, expected Plan object")
+        return Command(goto="research_team")
 
     # Find the first unexecuted step
     current_step = None
@@ -51,6 +56,42 @@ async def _execute_agent_step(state: State, agent: CompiledGraph, agent_name: st
     if not current_step:
         logger.warning("No unexecuted step found")
         return Command(goto="research_team")
+
+    messages = state.get("messages", [])
+    if messages:
+        try:
+            llm = get_llm_by_type(AGENT_LLM_MAP[agent_name])
+
+            message_contents = []
+            for msg in messages:
+                if hasattr(msg, "content") and msg.content:
+                    if isinstance(msg.content, str):
+                        message_contents.append(msg.content)
+                    else:
+                        message_contents.append(str(msg.content))
+                elif msg:
+                    message_contents.append(str(msg))
+
+            combined_messages = "\n".join(message_contents)
+
+            try:
+                current_context_tokens = llm.get_num_tokens(combined_messages)
+            except Exception as e:
+                logger.warning(f"Error calculating tokens with LLM: {e}, using approximate calculation")
+
+                current_context_tokens = count_tokens_approximately(combined_messages)
+
+            if current_context_tokens > Configuration.max_observations_tokens:
+                logger.warning(
+                    f"Context too large ({current_context_tokens} tokens), "
+                    f"skipping step execution to trigger compression"
+                )
+                return Command(goto="research_team")
+
+            logger.info(f"Current context size: {current_context_tokens} tokens, proceeding with step execution")
+
+        except Exception as e:
+            logger.warning(f"Error calculating context tokens: {e}, proceeding with step execution")
 
     logger.info(f"Executing step: {current_step.title}, agent: {agent_name}")
 

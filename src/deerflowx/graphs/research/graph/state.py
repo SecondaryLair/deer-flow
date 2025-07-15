@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: MIT
 
 
-from typing import Annotated, TypedDict
+from typing import Annotated, NotRequired, TypedDict
 
 from langchain_core.messages import AnyMessage
 from langgraph.graph import add_messages
@@ -15,7 +15,7 @@ class State(TypedDict):
     """State for the agent system"""
 
     messages: Annotated[list[AnyMessage], add_messages]
-    # Runtime Variables
+
     auto_accepted_plan: bool
     enable_background_investigation: bool
     locale: str
@@ -26,3 +26,8 @@ class State(TypedDict):
     current_plan: Plan | str
     final_report: str
     background_investigation_results: str
+
+    compression_decision: NotRequired[str]
+    estimated_tokens: NotRequired[int]
+    decision_reason: NotRequired[str]
+    summarized_observations: NotRequired[str]

@@ -38,7 +38,7 @@ def get_prompt_template(prompt_name: str) -> str:
         raise ValueError(msg) from e
 
 
-def apply_prompt_template(prompt_name: str, state: AgentState, configurable: Configuration = None) -> list:
+def apply_prompt_template(prompt_name: str, state: AgentState, configurable: Configuration | None = None) -> list:
     """Apply template variables to a prompt template and return formatted messages.
 
     Args:

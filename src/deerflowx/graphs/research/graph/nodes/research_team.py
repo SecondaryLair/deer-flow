@@ -4,7 +4,7 @@
 import logging
 from typing import Any
 
-from deerflowx.graphs.research.graph.types import State
+from deerflowx.graphs.research.graph.state import State
 from deerflowx.utils.node_base import NodeBase
 
 logger = logging.getLogger(__name__)

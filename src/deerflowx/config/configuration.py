@@ -18,13 +18,23 @@ from deerflowx.libs.rag.retriever import Resource
 class Configuration:
     """The configurable fields."""
 
-    resources: list[Resource] = field(default_factory=list)  # Resources to be used for the research
-    max_plan_iterations: int = 1  # Maximum number of plan iterations
-    max_step_num: int = 3  # Maximum number of steps in a plan
-    max_search_results: int = 3  # Maximum number of search results
-    mcp_settings: dict[str, Any] | None = None  # MCP settings, including dynamic loaded tools
-    report_style: str = ReportStyle.ACADEMIC.value  # Report style
-    enable_deep_thinking: bool = False  # Whether to enable deep thinking
+    resources: list[Resource] = field(default_factory=list)
+    max_step_num: int = 3
+    max_search_results: int = 3
+    max_plan_iterations: int = 1
+
+    enable_deep_thinking: bool = False
+    enable_background_investigation: bool = True
+    auto_accepted_plan: bool = False
+
+    report_style: str = ReportStyle.ACADEMIC.value
+    mcp_settings: dict[str, Any] | None = None
+
+    max_observations_tokens: int = 45000
+    compression_safety_margin: float = 0.8
+    summarizer_chunk_size: int = 8000
+    summarizer_chunk_overlap: int = 400
+    summarizer_enable_second_pass: bool = True
 
     @classmethod
     def from_runnable_config(cls, config: RunnableConfig | None = None) -> Configuration:

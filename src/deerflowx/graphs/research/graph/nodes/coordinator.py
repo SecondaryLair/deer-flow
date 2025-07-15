@@ -10,7 +10,7 @@ from langgraph.types import Command
 
 from deerflowx.config.agents import AGENT_LLM_MAP
 from deerflowx.config.configuration import Configuration
-from deerflowx.graphs.research.graph.types import State
+from deerflowx.graphs.research.graph.state import State
 from deerflowx.prompts.template import apply_prompt_template
 from deerflowx.utils.llms.llm import get_llm_by_type
 from deerflowx.utils.node_base import NodeBase

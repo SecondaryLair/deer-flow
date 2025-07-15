@@ -9,7 +9,7 @@ from langchain_core.runnables import RunnableConfig
 
 from deerflowx.config import SELECTED_SEARCH_ENGINE, SearchEngine
 from deerflowx.config.configuration import Configuration
-from deerflowx.graphs.research.graph.types import State
+from deerflowx.graphs.research.graph.state import State
 from deerflowx.tools import (
     get_web_search_tool,
 )

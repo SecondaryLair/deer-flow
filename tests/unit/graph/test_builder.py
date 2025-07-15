@@ -42,7 +42,7 @@ def test_continue_to_running_research_team_all_executed(mock_state):
     Plan = mock_state["Plan"]
     steps = [Step(execution_res=True), Step(execution_res=True)]
     state = {"current_plan": Plan(steps=steps)}
-    assert builder_mod.continue_to_running_research_team(state) == "planner"
+    assert builder_mod.continue_to_running_research_team(state) == "tokens_evaluator"
 
 
 def test_continue_to_running_research_team_next_researcher(mock_state):
@@ -85,7 +85,8 @@ def test_build_base_graph_adds_nodes_and_edges(MockStateGraph):
     # Check that all nodes and edges are added
     assert mock_builder.add_edge.call_count >= 2
     assert mock_builder.add_node.call_count >= 8
-    mock_builder.add_conditional_edges.assert_called_once()
+
+    assert mock_builder.add_conditional_edges.call_count == 2
 
 
 @patch("deerflowx.graphs.research.graph.builder._build_base_graph")

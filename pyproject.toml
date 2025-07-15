@@ -104,6 +104,9 @@ unfixable = []
     "FBT002",
     "BLE001",
     "ANN401",
+    "SIM108",
+    "ERA001",
+    "FIX002",
 ]
 "**/{tests,docs,examples,benchmarks}/*" = [
     "S",

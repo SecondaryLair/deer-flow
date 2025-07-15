@@ -8,7 +8,7 @@ from langchain_core.runnables import RunnableConfig
 from langgraph.types import Command
 
 from deerflowx.graphs.research.graph.nodes._executor import _setup_and_execute_agent_step
-from deerflowx.graphs.research.graph.types import State
+from deerflowx.graphs.research.graph.state import State
 from deerflowx.tools import (
     python_repl_tool,
 )
