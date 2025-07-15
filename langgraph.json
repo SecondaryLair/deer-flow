@@ -1,7 +1,7 @@
 {
   "dockerfile_lines": [],
   "graphs": {
-    "deep_research": "./src/deerflowx/workflow.py:graph"
+    "deep_research": "./src/deerflowx/graphs/research/graph/builder.py:graph"
   },
   "python_version": "3.12",
   "env": "./.env",
