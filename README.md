@@ -25,6 +25,90 @@ DeerFlowX 的存在完全基于上游项目的卓越工作。原项目提供了�
 
 在上游项目的基础上, DeerFlowX[已完成的计划](./docs/x/plan/done/), [准备中的计划](./docs/x/plan/)
 
+## DeepResearch Graph一览
+
+### 原来的实现
+
+```mermaid
+---
+config:
+  flowchart:
+    curve: linear
+---
+flowchart TD
+    __start__(["<p>__start__</p>"]) --> coordinator("coordinator")
+    background_investigator("background_investigator") --> planner("planner")
+    coder("coder") -.-> research_team("research_team")
+    coordinator -.-> __end__(["<p>__end__</p>"]) & background_investigator & planner
+    human_feedback("human_feedback") -.-> __end__ & planner & reporter("reporter") & research_team
+    planner -.-> human_feedback & reporter
+    research_team -.-> coder & planner & researcher("researcher")
+    researcher -.-> research_team
+    reporter --> __end__
+     __start__:::first
+     __end__:::last
+    classDef default fill:#f2f0ff,line-height:1.2
+    classDef first fill-opacity:0
+    classDef last fill:#bfb6fc
+
+```
+
+### 当前实现
+> [!note]
+> 你可以使用该命令生成最新图表
+> ```bash
+> uv run python src/deerflowx/graphs/research/graph/builder.py
+> ```
+
+```mermaid
+---
+config:
+  flowchart:
+    curve: linear
+---
+graph TD;
+        __start__([<p>__start__</p>]):::first
+        coordinator(coordinator)
+        background_investigator(background_investigator)
+        planner(planner)
+        reporter(reporter)
+        research_team(research_team)
+        researcher(researcher)
+        coder(coder)
+        human_feedback(human_feedback)
+        tokens_evaluator(tokens_evaluator)
+        summarizer(summarizer)
+        map_summarize_chunk(map_summarize_chunk)
+        reduce_summaries(reduce_summaries)
+        __end__([<p>__end__</p>]):::last
+        __start__ --> coordinator;
+        background_investigator --> planner;
+        coder -.-> research_team;
+        coordinator -.-> __end__;
+        coordinator -.-> background_investigator;
+        coordinator -.-> planner;
+        human_feedback -.-> __end__;
+        human_feedback -.-> planner;
+        human_feedback -.-> reporter;
+        human_feedback -.-> research_team;
+        map_summarize_chunk --> reduce_summaries;
+        planner -.-> human_feedback;
+        planner -.-> reporter;
+        reduce_summaries --> reporter;
+        research_team -.-> coder;
+        research_team -.-> planner;
+        research_team -.-> researcher;
+        research_team -.-> tokens_evaluator;
+        researcher -.-> research_team;
+        summarizer --> map_summarize_chunk;
+        tokens_evaluator -.-> reporter;
+        tokens_evaluator -.-> summarizer;
+        reporter --> __end__;
+        classDef default fill:#f2f0ff,line-height:1.2
+        classDef first fill-opacity:0
+        classDef last fill:#bfb6fc
+```
+
 
 ## 🚀 快速开始
 
