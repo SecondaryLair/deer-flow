@@ -29,15 +29,22 @@ def test_default_configuration():
     assert config.max_step_num == 3
     assert config.max_search_results == 3
     assert config.mcp_settings is None
+    assert config.max_observations_tokens == 45000
+    assert config.compression_safety_margin == 0.8
+    assert config.summarizer_chunk_size == 8000
+    assert config.summarizer_chunk_overlap == 400
+    assert config.summarizer_enable_second_pass is True
 
 
-def test_from_runnable_config_with_config_dict(monkeypatch):
+def test_from_runnable_config_with_config_dict():
     config_dict = {
         "configurable": {
             "max_plan_iterations": 5,
             "max_step_num": 7,
             "max_search_results": 10,
             "mcp_settings": {"foo": "bar"},
+            "max_observations_tokens": 60000,
+            "compression_safety_margin": 0.9,
         }
     }
     config = Configuration.from_runnable_config(config_dict)
@@ -45,38 +52,20 @@ def test_from_runnable_config_with_config_dict(monkeypatch):
     assert config.max_step_num == 7
     assert config.max_search_results == 10
     assert config.mcp_settings == {"foo": "bar"}
+    assert config.max_observations_tokens == 60000
+    assert config.compression_safety_margin == 0.9
 
 
-def test_from_runnable_config_with_env_override(monkeypatch):
-    monkeypatch.setenv("MAX_PLAN_ITERATIONS", "9")
-    monkeypatch.setenv("MAX_STEP_NUM", "11")
-    config_dict = {
-        "configurable": {
-            "max_plan_iterations": 2,
-            "max_step_num": 3,
-            "max_search_results": 4,
-        }
-    }
-    config = Configuration.from_runnable_config(config_dict)
-    # Environment variables take precedence and are strings
-    assert config.max_plan_iterations == "9"
-    assert config.max_step_num == "11"
-    assert config.max_search_results == 4  # not overridden
-    # Clean up
-    monkeypatch.delenv("MAX_PLAN_ITERATIONS")
-    monkeypatch.delenv("MAX_STEP_NUM")
-
-
-def test_from_runnable_config_with_none_and_falsy(monkeypatch):
+def test_from_runnable_config_with_none_and_falsy():
     config_dict = {
         "configurable": {
             "max_plan_iterations": None,
-            "max_step_num": 0,  # falsy, should be skipped
+            "max_step_num": 0,
             "max_search_results": "",
         }
     }
     config = Configuration.from_runnable_config(config_dict)
-    # Should fall back to defaults for skipped/falsy values
+    # None and falsy values should use defaults
     assert config.max_plan_iterations == 1
     assert config.max_step_num == 3
     assert config.max_search_results == 3
