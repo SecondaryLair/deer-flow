@@ -50,7 +50,6 @@ async def planner_node(state: State, config: RunnableConfig) -> Command[Literal[
     else:
         llm = get_llm_by_type(AGENT_LLM_MAP["planner"])
 
-    # if the plan iterations is greater than the max plan iterations, return the reporter node
     if plan_iterations >= configurable.max_plan_iterations:
         return Command(goto="reporter")
 
@@ -59,7 +58,6 @@ async def planner_node(state: State, config: RunnableConfig) -> Command[Literal[
         response = await llm.ainvoke(messages)
         full_response = response.model_dump_json(indent=4, exclude_none=True)
     else:
-        # Use async streaming for better performance
         response_stream = llm.astream(messages)
         async for chunk in response_stream:
             full_response += chunk.content
@@ -74,16 +72,20 @@ async def planner_node(state: State, config: RunnableConfig) -> Command[Literal[
         if plan_iterations > 0:
             return Command(goto="reporter")
         return Command(goto="__end__")
+
+    # Always go through human_feedback for plan review, regardless of has_enough_context
+    # This ensures proper oversight and allows users to modify plans before execution
     if curr_plan.get("has_enough_context"):
-        logger.info("Planner response has enough context.")
+        logger.info("Planner believes it has enough context, but still requiring human feedback for review.")
         new_plan = Plan.model_validate(curr_plan)
         return Command(
             update={
                 "messages": [AIMessage(content=full_response, name="planner")],
                 "current_plan": new_plan,
             },
-            goto="reporter",
+            goto="human_feedback",
         )
+
     return Command(
         update={
             "messages": [AIMessage(content=full_response, name="planner")],

@@ -54,7 +54,6 @@ async def reporter_node(state: State, config: RunnableConfig) -> dict[str, Any]:
 
     invoke_messages = apply_prompt_template("reporter", template_state, configurable)
 
-    # Add a reminder about the new report format, citation style, and table usage
     invoke_messages.append(
         HumanMessage(
             content=(

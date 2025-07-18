@@ -2,7 +2,7 @@ import logging
 import os
 from typing import Any, Literal
 
-from langchain_core.messages import HumanMessage
+from langchain_core.messages import AnyMessage, HumanMessage
 from langchain_core.messages.utils import count_tokens_approximately
 from langchain_core.runnables import RunnableConfig
 from langchain_mcp_adapters.client import MultiServerMCPClient
@@ -14,9 +14,13 @@ from deerflowx.config.agents import AGENT_LLM_MAP
 from deerflowx.config.configuration import Configuration
 from deerflowx.graphs.research.graph.state import State
 from deerflowx.prompts import apply_prompt_template
-from deerflowx.utils.llms.llm import get_llm_by_type
+from deerflowx.utils.context_compressor import SmartContextCompressor
+from deerflowx.utils.llms.llm import get_llm_by_type, get_model_name_for_agent
 
 logger = logging.getLogger(__name__)
+
+DEFAULT_TOKEN_WARNING_THRESHOLD = 20000
+DEFAULT_MAX_CONTEXT_TOKENS = 32000
 
 
 def create_agent(
@@ -35,7 +39,13 @@ def create_agent(
     )
 
 
-async def _execute_agent_step(state: State, agent: CompiledGraph, agent_name: str) -> Command[Literal["research_team"]]:  # noqa: C901, PLR0912, PLR0915 # TODO: @l8ng 太复杂了需要重构
+async def _execute_agent_step(  # noqa: C901, PLR0912, PLR0915
+    state: State,
+    agent: CompiledGraph,
+    agent_name: str,
+    config: RunnableConfig,
+) -> Command[Literal["research_team"]]:
+    # TODO: @l8ng 太复杂了需要重构
     """Helper function to execute a step using the specified agent."""
     current_plan = state.get("current_plan")
     observations = state.get("observations", [])
@@ -44,7 +54,6 @@ async def _execute_agent_step(state: State, agent: CompiledGraph, agent_name: st
         logger.warning("Invalid current_plan type, expected Plan object")
         return Command(goto="research_team")
 
-    # Find the first unexecuted step
     current_step = None
     completed_steps = []
     for step in current_plan.steps:
@@ -58,64 +67,32 @@ async def _execute_agent_step(state: State, agent: CompiledGraph, agent_name: st
         return Command(goto="research_team")
 
     messages = state.get("messages", [])
-    if messages:
-        try:
-            llm = get_llm_by_type(AGENT_LLM_MAP[agent_name])
 
-            message_contents = []
-            for msg in messages:
-                if hasattr(msg, "content") and msg.content:
-                    if isinstance(msg.content, str):
-                        message_contents.append(msg.content)
-                    else:
-                        message_contents.append(str(msg.content))
-                elif msg:
-                    message_contents.append(str(msg))
-
-            combined_messages = "\n".join(message_contents)
-
-            try:
-                current_context_tokens = llm.get_num_tokens(combined_messages)
-            except Exception as e:
-                logger.warning(f"Error calculating tokens with LLM: {e}, using approximate calculation")
-
-                current_context_tokens = count_tokens_approximately(combined_messages)
-
-            if current_context_tokens > Configuration.max_observations_tokens:
-                logger.warning(
-                    f"Context too large ({current_context_tokens} tokens), "
-                    f"skipping step execution to trigger compression"
-                )
-                return Command(goto="research_team")
-
-            logger.info(f"Current context size: {current_context_tokens} tokens, proceeding with step execution")
-
-        except Exception as e:
-            logger.warning(f"Error calculating context tokens: {e}, proceeding with step execution")
-
-    logger.info(f"Executing step: {current_step.title}, agent: {agent_name}")
-
-    # Format completed steps information
     completed_steps_info = ""
     if completed_steps:
-        completed_steps_info = "# Existing Research Findings\n\n"
+        completed_steps_info += "## Completed Steps\n\n"
         for i, step in enumerate(completed_steps):
-            completed_steps_info += f"## Existing Finding {i + 1}: {step.title}\n\n"
-            completed_steps_info += f"<finding>\n{step.execution_res}\n</finding>\n\n"
+            completed_steps_info += f"### Step {i + 1}: {step.title}\n\n"
+            completed_steps_info += f"Result: {step.execution_res}\n\n"
 
-    # Prepare the input for the agent with completed steps info
-    agent_input = {
-        "messages": [
-            HumanMessage(
-                content=(
-                    f"{completed_steps_info}# Current Task\n\n## Title\n\n{current_step.title}\n\n"
-                    f"## Description\n\n{current_step.description}\n\n## Locale\n\n{state.get('locale', 'en-US')}"
-                ),
+    if observations:
+        completed_steps_info += "## Observations\n\n"
+        completed_steps_info += "\n\n".join(observations) + "\n\n"
+
+    num_tokens = count_tokens_approximately(messages)
+    if num_tokens > DEFAULT_TOKEN_WARNING_THRESHOLD:
+        logger.warning(f"High token count ({num_tokens}) detected in messages before agent execution.")
+
+    messages_for_agent: list[AnyMessage] = [
+        HumanMessage(
+            content=(
+                f"{completed_steps_info}# Current Task\n\n## Title\n\n{current_step.title}\n\n"
+                f"## Description\n\n{current_step.description}\n\n## Locale\n\n{state.get('locale', 'en-US')}"
             ),
-        ],
-    }
+        ),
+    ]
+    agent_input: dict[str, Any] = {"messages": messages_for_agent}
 
-    # Add citation reminder for researcher agent
     if agent_name == "researcher":
         if state.get("resources"):
             resources_info = "**The user mentioned the following resource files:**\n\n"
@@ -142,7 +119,20 @@ async def _execute_agent_step(state: State, agent: CompiledGraph, agent_name: st
             ),
         )
 
-    # Invoke the agent
+    configurable = Configuration.from_runnable_config(config)
+    if configurable.enable_context_compression:
+        try:
+            model_name = get_model_name_for_agent(agent_name)
+            override_limit = (
+                configurable.max_context_tokens
+                if configurable.max_context_tokens != DEFAULT_MAX_CONTEXT_TOKENS
+                else None
+            )
+            compressor = SmartContextCompressor(model_name=model_name, override_token_limit=override_limit)
+            agent_input["messages"] = await compressor.compress(agent_input["messages"])
+        except ValueError as e:
+            logger.warning(f"Failed to initialize context compressor: {e}. Skipping compression.")
+
     default_recursion_limit = 25
     try:
         env_value_str = os.getenv("AGENT_RECURSION_LIMIT", str(default_recursion_limit))
@@ -167,11 +157,9 @@ async def _execute_agent_step(state: State, agent: CompiledGraph, agent_name: st
     logger.info(f"Agent input: {agent_input}")
     result = await agent.ainvoke(input=agent_input, config={"recursion_limit": recursion_limit})
 
-    # Process the result
     response_content = result["messages"][-1].content
     logger.debug(f"{agent_name.capitalize()} full response: {response_content}")
 
-    # Update the step with the execution result
     current_step.execution_res = response_content
     logger.info(f"Step '{current_step.title}' execution completed by {agent_name}")
 
@@ -235,8 +223,8 @@ async def _setup_and_execute_agent_step(
                     tool.description = f"Powered by '{enabled_tools[tool.name]}'.\n{tool.description}"
                     loaded_tools.append(tool)
             agent = create_agent(agent_type, agent_type, loaded_tools, agent_type)
-            return await _execute_agent_step(state, agent, agent_type)
+            return await _execute_agent_step(state, agent, agent_type, config)
     else:
         # Use default tools if no MCP servers are configured
         agent = create_agent(agent_type, agent_type, default_tools, agent_type)
-        return await _execute_agent_step(state, agent, agent_type)
+        return await _execute_agent_step(state, agent, agent_type, config)

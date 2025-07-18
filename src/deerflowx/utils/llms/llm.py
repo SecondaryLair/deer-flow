@@ -8,24 +8,61 @@ import httpx
 from langchain_deepseek import ChatDeepSeek
 from langchain_openai import ChatOpenAI
 
-from deerflowx.config.agents import LLMType
+from deerflowx.config.agents import AGENT_LLM_MAP, LLMType
 from deerflowx.config.settings import settings
 
 # Cache for LLM instances
 _llm_cache: dict[LLMType, ChatOpenAI | ChatDeepSeek] = {}
 
 
+def get_model_name_for_agent(agent_type: str) -> str:
+    """Get the actual model name for a given agent type.
+
+    Args:
+        agent_type: The agent type (e.g., "researcher", "planner")
+
+    Returns:
+        The actual model name (e.g., "doubao-1-5-pro-32k-250115")
+
+    Raises:
+        ValueError: If the agent type is not configured or model is not set
+    """
+    if agent_type not in AGENT_LLM_MAP:
+        msg = f"Unknown agent type: {agent_type}"
+        raise ValueError(msg)
+
+    llm_type = AGENT_LLM_MAP[agent_type]
+
+    match llm_type:
+        case "basic":
+            model_settings = settings.basic_model
+        case "reasoning":
+            model_settings = settings.reasoning_model
+        case "vision":
+            model_settings = settings.vision_model
+        case _:
+            msg = f"Unknown LLM type: {llm_type}"
+            raise ValueError(msg)
+
+    if not model_settings.model:
+        msg = f"No model configured for LLM type: {llm_type}"
+        raise ValueError(msg)
+
+    return model_settings.model
+
+
 def _create_llm_instance(llm_type: LLMType) -> ChatOpenAI | ChatDeepSeek:
     """Create LLM instance using configuration from settings."""
-    if llm_type == "basic":
-        model_settings = settings.basic_model
-    elif llm_type == "reasoning":
-        model_settings = settings.reasoning_model
-    elif llm_type == "vision":
-        model_settings = settings.vision_model
-    else:
-        msg = f"Unknown LLM type: {llm_type}"
-        raise ValueError(msg)
+    match llm_type:
+        case "basic":
+            model_settings = settings.basic_model
+        case "reasoning":
+            model_settings = settings.reasoning_model
+        case "vision":
+            model_settings = settings.vision_model
+        case _:
+            msg = f"Unknown LLM type: {llm_type}"
+            raise ValueError(msg)
 
     # Check if required configuration is present
     if not model_settings.api_key:
@@ -45,10 +82,11 @@ def _create_llm_instance(llm_type: LLMType) -> ChatOpenAI | ChatDeepSeek:
 
     # Add base_url if configured
     if model_settings.base_url:
-        if llm_type == "reasoning":
-            config["api_base"] = model_settings.base_url
-        else:
-            config["base_url"] = model_settings.base_url
+        match llm_type:
+            case "reasoning":
+                config["api_base"] = model_settings.base_url
+            case _:
+                config["base_url"] = model_settings.base_url
 
     # Handle SSL verification settings
     if not model_settings.verify_ssl:
@@ -58,9 +96,11 @@ def _create_llm_instance(llm_type: LLMType) -> ChatOpenAI | ChatDeepSeek:
         config["http_async_client"] = http_async_client
 
     # Create appropriate LLM instance
-    if llm_type == "reasoning":
-        return ChatDeepSeek(**config)
-    return ChatOpenAI(**config)
+    match llm_type:
+        case "reasoning":
+            return ChatDeepSeek(**config)
+        case _:
+            return ChatOpenAI(**config)
 
 
 def get_llm_by_type(llm_type: LLMType) -> ChatOpenAI | ChatDeepSeek:
@@ -84,14 +124,15 @@ def get_configured_llm_models() -> dict[str, list[str]]:
 
     for llm_type in get_args(LLMType):
         try:
-            if llm_type == "basic":
-                model_settings = settings.basic_model
-            elif llm_type == "reasoning":
-                model_settings = settings.reasoning_model
-            elif llm_type == "vision":
-                model_settings = settings.vision_model
-            else:
-                continue
+            match llm_type:
+                case "basic":
+                    model_settings = settings.basic_model
+                case "reasoning":
+                    model_settings = settings.reasoning_model
+                case "vision":
+                    model_settings = settings.vision_model
+                case _:
+                    continue
 
             # Check if model is configured
             if model_settings.api_key and model_settings.model:

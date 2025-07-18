@@ -4,6 +4,7 @@
 import logging
 from typing import Annotated, Literal
 
+from langchain_core.messages import AIMessage
 from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import tool
 from langgraph.types import Command
@@ -44,7 +45,7 @@ async def coordinator_node(
     locale = state.get("locale", "en-US")  # Default locale if not specified
     research_topic = state.get("research_topic", "")
 
-    if len(response.tool_calls) > 0:
+    if isinstance(response, AIMessage) and response.tool_calls:
         goto = "planner"
         if state.get("enable_background_investigation"):
             # if the search_before_planning is True, add the web search tool to the planner agent
@@ -68,6 +69,7 @@ async def coordinator_node(
             "locale": locale,
             "research_topic": research_topic,
             "resources": configurable.resources,
+            "goto": goto,
         },
         goto=goto,
     )

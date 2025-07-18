@@ -38,7 +38,7 @@ class WorkflowExecutor:
         max_plan_iterations: int = 1,
         max_step_num: int = 3,
         max_search_results: int = 3,
-        auto_accepted_plan: bool = True,
+        auto_accepted_plan: bool = False,
         interrupt_feedback: str = "",
         mcp_settings: dict | None = None,
         enable_background_investigation: bool = True,

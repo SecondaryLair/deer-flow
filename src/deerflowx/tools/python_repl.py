@@ -10,7 +10,6 @@ from langchain_experimental.utilities import PythonREPL
 
 from .decorators import log_io
 
-# Initialize REPL and logger
 repl = PythonREPL()
 logger = logging.getLogger(__name__)
 
@@ -31,7 +30,6 @@ def python_repl_tool(
     logger.info("Executing Python code")
     try:
         result = repl.run(code)
-        # Check if the result is an error message by looking for typical error patterns
         if isinstance(result, str) and ("Error" in result or "Exception" in result):
             logger.error(result)
             return f"Error executing code:\n```python\n{code}\n```\nError: {result}"
